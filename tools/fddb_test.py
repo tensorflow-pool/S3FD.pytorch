@@ -1,33 +1,29 @@
 #-*- coding:utf-8 -*-
 
-from __future__ import division
 from __future__ import absolute_import
+from __future__ import division
 from __future__ import print_function
 
+import argparse
 import os
 import sys
-import torch
-import argparse
-import torch.nn as nn
-import torch.utils.data as data
-import torch.backends.cudnn as cudnn
-import torchvision.transforms as transforms
+import time
 
 import cv2
-import time
 import numpy as np
+import torch
+import torch.backends.cudnn as cudnn
 from PIL import Image
+from torch.autograd import Variable
 
+sys.path.append("..")
 from data.config import cfg
 from s3fd import build_s3fd
-from torch.autograd import Variable
 from utils.augmentations import to_chw_bgr
 
 parser = argparse.ArgumentParser(description='s3fd evaluatuon fddb')
-parser.add_argument('--model', type=str,
-                    default='weights/s3fd.pth', help='trained model')
-parser.add_argument('--thresh', default=0.1, type=float,
-                    help='Final confidence threshold')
+parser.add_argument('--model', type=str, default=os.path.join("..", "weights/s3fd.pth"), help='trained model')
+parser.add_argument('--thresh', default=0.1, type=float, help='Final confidence threshold')
 args = parser.parse_args()
 
 
@@ -39,7 +35,7 @@ else:
     torch.set_default_tensor_type('torch.FloatTensor')
 
 
-FDDB_IMG_DIR = os.path.join(cfg.FACE.FDDB_DIR, 'images')
+FDDB_IMG_DIR = os.path.join(cfg.FACE.FDDB_DIR, 'originalPics')
 FDDB_FOLD_DIR = os.path.join(cfg.FACE.FDDB_DIR, 'FDDB-folds')
 FDDB_RESULT_DIR = os.path.join(cfg.FACE.FDDB_DIR, 's3fd')
 FDDB_RESULT_IMG_DIR = os.path.join(FDDB_RESULT_DIR, 'images')

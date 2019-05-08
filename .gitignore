@@ -8,3 +8,8 @@ data/val.txt
 data/*.txt
 img/02*.jpg
 img/tj*.jpg
+
+
+.idea
+tools/eval_tools
+tmp

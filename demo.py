@@ -1,27 +1,23 @@
 #-*- coding:utf-8 -*-
 
-from __future__ import division
 from __future__ import absolute_import
+from __future__ import division
 from __future__ import print_function
 
-import os
-import torch
 import argparse
-import torch.nn as nn
-import torch.utils.data as data
-import torch.backends.cudnn as cudnn
-import torchvision.transforms as transforms
+import os
+import time
 
 import cv2
-import time
 import numpy as np
+import torch
+import torch.backends.cudnn as cudnn
 from PIL import Image
+from torch.autograd import Variable
 
 from data.config import cfg
 from s3fd import build_s3fd
-from torch.autograd import Variable
 from utils.augmentations import to_chw_bgr
-
 
 parser = argparse.ArgumentParser(description='s3df demo')
 parser.add_argument('--save_dir', type=str, default='tmp/',

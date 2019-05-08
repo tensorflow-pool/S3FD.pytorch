@@ -1,19 +1,20 @@
 #-*- coding:utf-8 -*-
 
-from __future__ import division
 from __future__ import absolute_import
+from __future__ import division
 from __future__ import print_function
 
 import os
+
 import torch
 import torch.nn as nn
-import torch.nn.init as init
 import torch.nn.functional as F
+import torch.nn.init as init
 from torch.autograd import Variable
 
-from layers import *
 from data.config import cfg
-import numpy as np
+from layers import *
+
 
 class S3FD(nn.Module):
     """Single Shot Multibox Architecture

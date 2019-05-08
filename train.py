@@ -1,25 +1,26 @@
 #-*- coding:utf-8 -*-
 
-from __future__ import division
 from __future__ import absolute_import
+from __future__ import division
 from __future__ import print_function
 
+import argparse
 import os
 import time
+
+import numpy as np
 import torch
-import argparse
+import torch.backends.cudnn as cudnn
 import torch.nn as nn
 import torch.optim as optim
-import torch.nn.init as init
 import torch.utils.data as data
-import numpy as np
 from torch.autograd import Variable
-import torch.backends.cudnn as cudnn
 
 from data.config import cfg
-from s3fd import build_s3fd
-from layers.modules import MultiBoxLoss
 from data.factory import dataset_factory, detection_collate
+from layers.modules import MultiBoxLoss
+from s3fd import build_s3fd
+
 
 #os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
 

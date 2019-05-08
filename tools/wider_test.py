@@ -1,35 +1,31 @@
 #-*- coding:utf-8 -*-
 
-from __future__ import division
 from __future__ import absolute_import
+from __future__ import division
 from __future__ import print_function
 
-import os
-import torch
 import argparse
-import torch.nn as nn
-import torch.utils.data as data
-import torch.backends.cudnn as cudnn
-import torchvision.transforms as transforms
+import os
 import os.path as osp
+import sys
+import time
 
 import cv2
-import time
 import numpy as np
-from PIL import Image
 import scipy.io as sio
+import torch
+import torch.backends.cudnn as cudnn
+from PIL import Image
+from torch.autograd import Variable
 
+sys.path.append("..")
 from data.config import cfg
 from s3fd import build_s3fd
-from torch.autograd import Variable
 from utils.augmentations import to_chw_bgr
 
-
 parser = argparse.ArgumentParser(description='s3fd evaluatuon wider')
-parser.add_argument('--model', type=str,
-                    default='weights/s3fd.pth', help='trained model')
-parser.add_argument('--thresh', default=0.05, type=float,
-                    help='Final confidence threshold')
+parser.add_argument('--model', type=str, default=os.path.join("..", 'weights/s3fd.pth'), help='trained model')
+parser.add_argument('--thresh', default=0.05, type=float,help='Final confidence threshold')
 args = parser.parse_args()
 
 
@@ -160,17 +156,14 @@ def bbox_vote(det):
 def get_data():
     subset = 'val'
     if subset is 'val':
-        wider_face = sio.loadmat(
-            './eval_tools/wider_face_val.mat')
+        wider_face = sio.loadmat(os.path.join("..", 'eval_tools/wider_face_val.mat'))
     else:
-        wider_face = sio.loadmat(
-            './eval_tools/wider_face_test.mat')
+        wider_face = sio.loadmat(os.path.join("..", './eval_tools/wider_face_test.mat'))
     event_list = wider_face['event_list']
     file_list = wider_face['file_list']
     del wider_face
 
-    imgs_path = os.path.join(
-        cfg.FACE.WIDER_DIR, 'WIDER_{}'.format(subset), 'images')
+    imgs_path = os.path.join(cfg.FACE.WIDER_DIR, 'WIDER_{}'.format(subset), 'images')
     save_path = 'eval_tools/s3fd_{}'.format(subset)
 
     return event_list, file_list, imgs_path, save_path
@@ -192,13 +185,14 @@ if __name__ == '__main__':
 
     for index, event in enumerate(event_list):
         filelist = file_list[index][0]
-        path = os.path.join(save_path, event[0][0].encode('utf-8'))
+        event_name = event[0][0]
+        path = os.path.join(save_path, event_name)
         if not os.path.exists(path):
             os.makedirs(path)
 
         for num, file in enumerate(filelist):
-            im_name = file[0][0].encode('utf-8')
-            in_file = os.path.join(imgs_path, event[0][0], im_name[:] + '.jpg')
+            im_name = file[0][0]
+            in_file = os.path.join(imgs_path, event_name, im_name[:] + '.jpg')
             #img = cv2.imread(in_file)
             img = Image.open(in_file)
             if img.mode == 'L':
@@ -226,16 +220,13 @@ if __name__ == '__main__':
             t2 = time.time()
             print('Detect %04d th image costs %.4f' % (counter, t2 - t1))
 
-            fout = open(osp.join(save_path, event[0][
-                        0].encode('utf-8'), im_name + '.txt'), 'w')
-            fout.write('{:s}\n'.format(event[0][0].encode(
-                'utf-8') + '/' + im_name + '.jpg'))
+            fout = open(osp.join(save_path, event_name, im_name + '.txt'), 'w')
+            fout.write('{:s}\n'.format(event_name + '/' + im_name + '.jpg'))
             fout.write('{:d}\n'.format(dets.shape[0]))
-            for i in xrange(dets.shape[0]):
+            for i in range(dets.shape[0]):
                 xmin = dets[i][0]
                 ymin = dets[i][1]
                 xmax = dets[i][2]
                 ymax = dets[i][3]
                 score = dets[i][4]
-                fout.write('{:.1f} {:.1f} {:.1f} {:.1f} {:.3f}\n'.
-                           format(xmin, ymin, (xmax - xmin + 1), (ymax - ymin + 1), score))
+                fout.write('{:.1f} {:.1f} {:.1f} {:.1f} {:.3f}\n'.format(xmin, ymin, (xmax - xmin + 1), (ymax - ymin + 1), score))
