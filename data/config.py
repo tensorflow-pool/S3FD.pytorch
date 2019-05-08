@@ -60,7 +60,7 @@ _C.NUM_CLASSES = 2
 _C.USE_NMS = True
 
 # dataset config
-_C.HOME = '/home/data/lj/'
+_C.HOME = '/home/lijc08/datasets/'
 
 # hand config
 _C.HAND = EasyDict()
@@ -71,8 +71,8 @@ _C.HAND.OVERLAP_THRESH = 0.35
 
 # face config
 _C.FACE = EasyDict()
-_C.FACE.TRAIN_FILE = './data/face_train.txt'
-_C.FACE.VAL_FILE = './data/face_val.txt'
+_C.FACE.TRAIN_FILE = '/home/lijc08/datasets/widerface/face_train.txt'
+_C.FACE.VAL_FILE = '/home/lijc08/datasets/widerface/face_val.txt'
 _C.FACE.FDDB_DIR = '/home/lijc08/datasets/fddb'
 _C.FACE.WIDER_DIR = '/home/lijc08/datasets/widerface'
 _C.FACE.AFW_DIR = '/home/data/lj/AFW'

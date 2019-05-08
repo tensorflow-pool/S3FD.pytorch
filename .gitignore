@@ -13,3 +13,9 @@ img/tj*.jpg
 .idea
 tools/eval_tools
 tmp
+nohup.out
+
+
+
+
+
