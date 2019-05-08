@@ -122,8 +122,7 @@ if not args.resume:
     s3fd_net.loc.apply(s3fd_net.weights_init)
     s3fd_net.conf.apply(s3fd_net.weights_init)
 
-optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=args.momentum,
-                      weight_decay=args.weight_decay)
+optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=args.momentum, weight_decay=args.weight_decay)
 criterion = MultiBoxLoss(cfg, args.dataset, args.cuda)
 print('Loading wider dataset...')
 
@@ -176,19 +175,17 @@ def train():
 
             if iteration % 10 == 0:
                 tloss = losses / (batch_idx + 1)
-                logging.info('Timer: %.4f' % (t1 - t0))
-                logging.info('epoch:' + repr(epoch) + ' || iter:' +
-                      repr(iteration) + ' || Loss:%.4f' % (tloss))
+                #logging.info('Timer: %.4f' % (t1 - t0))
+                logging.info('epoch:' + repr(epoch) + ' || iter:' + repr(iteration) + ' || Loss:%.4f' % (tloss) + 'lr:{:.6f}'.format(optimizer.param_groups[0]['lr']))
                 logging.info('->> conf loss:{:.4f} || loc loss:{:.4f}'.format(loss_c.item(), loss_l.item()))
-                logging.info('->>lr:{:.6f}'.format(optimizer.param_groups[0]['lr']))
 
-            if iteration != 0 and iteration % 5000 == 0:
-                logging.info('Saving state, iter:', iteration)
+            if iteration != 0 and iteration % 50 == 0:
+                logging.info('Saving state, iter: %s', iteration)
                 file = 'sfd_' + args.dataset + '_' + repr(iteration) + '.pth'
                 torch.save(s3fd_net.state_dict(), os.path.join(save_folder, file))
             iteration += 1
 
-        val(epoch)
+        #val(epoch)
         if iteration == cfg.MAX_STEPS:
             break
 
@@ -202,17 +199,18 @@ def val(epoch):
     for batch_idx, (images, targets) in enumerate(val_loader):
         if args.cuda:
             images = Variable(images.cuda())
-            targets = [Variable(ann.cuda(), volatile=True)
-                       for ann in targets]
+            with torch.no_grad():
+                targets = [Variable(ann.cuda()) for ann in targets]
         else:
             images = Variable(images)
-            targets = [Variable(ann, volatile=True) for ann in targets]
+            with torch.no_grad():
+                targets = [Variable(ann) for ann in targets]
 
         out = net(images)
         loss_l, loss_c = criterion(out, targets)
         loss = loss_l + loss_c
-        loc_loss += loss_l.data[0]
-        conf_loss += loss_c.data[0]
+        loc_loss += loss_l.item()
+        conf_loss += loss_c.item()
         step += 1
 
     tloss = (loc_loss + conf_loss) / step
@@ -222,7 +220,7 @@ def val(epoch):
 
     global min_loss
     if tloss < min_loss:
-        logging.info('Saving best state,epoch', epoch)
+        logging.info('Saving best state,epoch %s', epoch)
         file = 'sfd_{}.pth'.format(args.dataset)
         torch.save(s3fd_net.state_dict(), os.path.join(save_folder, file))
         min_loss = tloss
