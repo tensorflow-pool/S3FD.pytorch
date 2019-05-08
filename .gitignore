@@ -14,6 +14,7 @@ img/tj*.jpg
 tools/eval_tools
 tmp
 nohup.out
+models_*
 
 
 

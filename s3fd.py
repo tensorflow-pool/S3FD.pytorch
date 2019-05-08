@@ -143,7 +143,8 @@ class S3FD(nn.Module):
             features_maps += [feat]
 
         self.priorbox = PriorBox(size, features_maps, cfg)
-        self.priors = Variable(self.priorbox.forward(), volatile=True)
+        with torch.no_grad():
+            self.priors = Variable(self.priorbox.forward())
 
         loc = torch.cat([o.view(o.size(0), -1) for o in loc], 1)
         conf = torch.cat([o.view(o.size(0), -1) for o in conf], 1)
@@ -180,7 +181,7 @@ class S3FD(nn.Module):
         return epoch
 
     def xavier(self, param):
-        init.xavier_uniform(param)
+        init.xavier_uniform_(param)
 
     def weights_init(self, m):
         if isinstance(m, nn.Conv2d):

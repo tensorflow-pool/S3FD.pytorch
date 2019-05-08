@@ -7,6 +7,7 @@ from __future__ import print_function
 import argparse
 import os
 import time
+import logging
 
 import numpy as np
 import torch
@@ -39,7 +40,7 @@ parser.add_argument('--basenet',
                     default='vgg16_reducedfc.pth',
                     help='Pretrained base model')
 parser.add_argument('--batch_size',
-                    default=16, type=int,
+                    default=8, type=int,
                     help='Batch size for training')
 parser.add_argument('--resume',
                     default=None, type=str,
@@ -65,9 +66,6 @@ parser.add_argument('--gamma',
 parser.add_argument('--multigpu',
                     default=False, type=str2bool,
                     help='Use mutil Gpu training')
-parser.add_argument('--save_folder',
-                    default='weights/',
-                    help='Directory for saving checkpoint models')
 args = parser.parse_args()
 
 
@@ -80,9 +78,6 @@ if torch.cuda.is_available():
         torch.set_default_tensor_type('torch.FloatTensor')
 else:
     torch.set_default_tensor_type('torch.FloatTensor')
-
-if not os.path.exists(args.save_folder):
-    os.makedirs(args.save_folder)
 
 
 train_dataset, val_dataset = dataset_factory(args.dataset)
@@ -111,7 +106,7 @@ if args.resume:
     start_epoch = net.load_weights(args.resume)
 
 else:
-    vgg_weights = torch.load(args.save_folder + args.basenet)
+    vgg_weights = torch.load("weights/" + args.basenet)
     print('Load base network....')
     net.vgg.load_state_dict(vgg_weights)
 
@@ -131,11 +126,25 @@ optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=args.momentum,
                       weight_decay=args.weight_decay)
 criterion = MultiBoxLoss(cfg, args.dataset, args.cuda)
 print('Loading wider dataset...')
-print('Using the specified args:')
-print(args)
 
-
+save_folder = None
 def train():
+    prefix = time.strftime("%Y-%m-%d-%H:%M:%S")
+    global save_folder
+    save_folder = "models_{}".format(prefix)
+    if not os.path.exists(save_folder):
+        os.mkdir(save_folder)
+    logging.basicConfig()
+    logging.getLogger().setLevel(logging.INFO)
+    fh = logging.FileHandler("{}/train.log".format(save_folder))
+    # create formatter#
+    formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+    # add formatter to ch
+    fh.setFormatter(formatter)
+    logging.getLogger().addHandler(fh)
+    logging.info('Using the specified args:')
+    logging.info(args)
+    
     step_index = 0
     iteration = 0
     net.train()
@@ -144,8 +153,8 @@ def train():
         for batch_idx, (images, targets) in enumerate(train_loader):
             if args.cuda:
                 images = Variable(images.cuda())
-                targets = [Variable(ann.cuda(), volatile=True)
-                           for ann in targets]
+                with torch.no_grad():
+                    targets = [Variable(ann.cuda()) for ann in targets]
             else:
                 images = Variable(images)
                 targets = [Variable(ann, volatile=True) for ann in targets]
@@ -163,22 +172,20 @@ def train():
             loss.backward()
             optimizer.step()
             t1 = time.time()
-            losses += loss.data[0]
+            losses += loss.item()
 
             if iteration % 10 == 0:
                 tloss = losses / (batch_idx + 1)
-                print('Timer: %.4f' % (t1 - t0))
-                print('epoch:' + repr(epoch) + ' || iter:' +
+                logging.info('Timer: %.4f' % (t1 - t0))
+                logging.info('epoch:' + repr(epoch) + ' || iter:' +
                       repr(iteration) + ' || Loss:%.4f' % (tloss))
-                print('->> conf loss:{:.4f} || loc loss:{:.4f}'.format(
-                    loss_c.data[0], loss_l.data[0]))
-                print('->>lr:{:.6f}'.format(optimizer.param_groups[0]['lr']))
+                logging.info('->> conf loss:{:.4f} || loc loss:{:.4f}'.format(loss_c.item(), loss_l.item()))
+                logging.info('->>lr:{:.6f}'.format(optimizer.param_groups[0]['lr']))
 
             if iteration != 0 and iteration % 5000 == 0:
-                print('Saving state, iter:', iteration)
+                logging.info('Saving state, iter:', iteration)
                 file = 'sfd_' + args.dataset + '_' + repr(iteration) + '.pth'
-                torch.save(s3fd_net.state_dict(),
-                           os.path.join(args.save_folder, file))
+                torch.save(s3fd_net.state_dict(), os.path.join(save_folder, file))
             iteration += 1
 
         val(epoch)
@@ -210,15 +217,14 @@ def val(epoch):
 
     tloss = (loc_loss + conf_loss) / step
     t2 = time.time()
-    print('Timer: %.4f' % (t2 - t1))
-    print('test epoch:' + repr(epoch) + ' || Loss:%.4f' % (tloss))
+    logging.info('Timer: %.4f' % (t2 - t1))
+    logging.info('test epoch:' + repr(epoch) + ' || Loss:%.4f' % (tloss))
 
     global min_loss
     if tloss < min_loss:
-        print('Saving best state,epoch', epoch)
+        logging.info('Saving best state,epoch', epoch)
         file = 'sfd_{}.pth'.format(args.dataset)
-        torch.save(s3fd_net.state_dict(), os.path.join(
-            args.save_folder, file))
+        torch.save(s3fd_net.state_dict(), os.path.join(save_folder, file))
         min_loss = tloss
 
     states = {
@@ -226,8 +232,7 @@ def val(epoch):
         'weight': s3fd_net.state_dict(),
     }
     file = 'sfd_{}_checkpoint.pth'.format(args.dataset)
-    torch.save(states, os.path.join(
-        args.save_folder, file))
+    torch.save(states, os.path.join(save_folder, file))
 
 
 def adjust_learning_rate(optimizer, gamma, step):
