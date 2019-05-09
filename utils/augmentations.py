@@ -1,20 +1,18 @@
-#-*- coding:utf-8 -*-
+# -*- coding:utf-8 -*-
 
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import math
+import random
 
-import torch
-from torchvision import transforms
 import cv2
 import numpy as np
-import types
-from PIL import Image, ImageEnhance, ImageDraw
-import math
 import six
+from PIL import Image, ImageEnhance
+
 from data.config import cfg
-import random
 
 
 class sampler():
@@ -146,9 +144,9 @@ def meet_emit_constraint(src_bbox, sample_bbox):
 
 def project_bbox(object_bbox, sample_bbox):
     if object_bbox.xmin >= sample_bbox.xmax or \
-       object_bbox.xmax <= sample_bbox.xmin or \
-       object_bbox.ymin >= sample_bbox.ymax or \
-       object_bbox.ymax <= sample_bbox.ymin:
+            object_bbox.xmax <= sample_bbox.xmin or \
+            object_bbox.ymin >= sample_bbox.ymax or \
+            object_bbox.ymax <= sample_bbox.ymin:
         return False
     else:
         proj_bbox = bbox(0, 0, 0, 0)
@@ -291,7 +289,7 @@ def data_anchor_sampling(sampler, bbox_labels, image_width, image_height,
                 range_size = scale_ind + 1
                 break
 
-        if area > scale_array[len(scale_array) - 2]**2:
+        if area > scale_array[len(scale_array) - 2] ** 2:
             range_size = len(scale_array) - 2
         scale_choose = 0.0
         if range_size == 0:
@@ -364,11 +362,11 @@ def jaccard_overlap(sample_bbox, object_bbox):
     intersect_xmax = min(sample_bbox.xmax, object_bbox.xmax)
     intersect_ymax = min(sample_bbox.ymax, object_bbox.ymax)
     intersect_size = (intersect_xmax - intersect_xmin) * (
-        intersect_ymax - intersect_ymin)
+            intersect_ymax - intersect_ymin)
     sample_bbox_size = bbox_area(sample_bbox)
     object_bbox_size = bbox_area(object_bbox)
     overlap = intersect_size / (
-        sample_bbox_size + object_bbox_size - intersect_size)
+            sample_bbox_size + object_bbox_size - intersect_size)
     return overlap
 
 
@@ -448,7 +446,7 @@ def crop_image_sampling(img, bbox_labels, sample_bbox, image_width,
 
     sample_img = np.zeros((height, width, 3))
     # print(sample_img.shape)
-    sample_img[roi_y1 : roi_y2, roi_x1 : roi_x2] = \
+    sample_img[roi_y1: roi_y2, roi_x1: roi_x2] = \
         img[cross_y1: cross_y2, cross_x1: cross_x2]
     sample_img = cv2.resize(
         sample_img, (resize_width, resize_height), interpolation=cv2.INTER_AREA)
@@ -490,11 +488,11 @@ def generate_sample(sampler, image_width, image_height):
     scale = np.random.uniform(sampler.min_scale, sampler.max_scale)
     aspect_ratio = np.random.uniform(sampler.min_aspect_ratio,
                                      sampler.max_aspect_ratio)
-    aspect_ratio = max(aspect_ratio, (scale**2.0))
-    aspect_ratio = min(aspect_ratio, 1 / (scale**2.0))
+    aspect_ratio = max(aspect_ratio, (scale ** 2.0))
+    aspect_ratio = min(aspect_ratio, 1 / (scale ** 2.0))
 
-    bbox_width = scale * (aspect_ratio**0.5)
-    bbox_height = scale / (aspect_ratio**0.5)
+    bbox_width = scale * (aspect_ratio ** 0.5)
+    bbox_height = scale / (aspect_ratio ** 0.5)
 
     # guarantee a squared image patch after cropping
     if sampler.use_square:
@@ -590,10 +588,10 @@ def anchor_crop_image_sampling(img,
 
     target_anchor = random.choice(scale_array[0:min(anchor_idx + 1, 5) + 1])
     ratio = float(target_anchor) / rand_Side
-    ratio = ratio * (2**random.uniform(-1, 1))
+    ratio = ratio * (2 ** random.uniform(-1, 1))
 
     if int(img_height * ratio * img_width * ratio) > maxSize * maxSize:
-        ratio = (maxSize * maxSize / (img_height * img_width))**0.5
+        ratio = (maxSize * maxSize / (img_height * img_width)) ** 0.5
 
     interp_methods = [cv2.INTER_LINEAR, cv2.INTER_CUBIC,
                       cv2.INTER_AREA, cv2.INTER_NEAREST, cv2.INTER_LANCZOS4]
@@ -663,9 +661,9 @@ def anchor_crop_image_sampling(img,
         # print('crop the box :',choice_box)
         centers = (boxes[:, :2] + boxes[:, 2:]) / 2.0
         m1 = (choice_box[0] < centers[:, 0]) * \
-            (choice_box[1] < centers[:, 1])
+             (choice_box[1] < centers[:, 1])
         m2 = (choice_box[2] > centers[:, 0]) * \
-            (choice_box[3] > centers[:, 1])
+             (choice_box[3] > centers[:, 1])
         mask = m1 * m2
         current_boxes = boxes[mask, :].copy()
         current_labels = labels[mask]
@@ -674,9 +672,9 @@ def anchor_crop_image_sampling(img,
 
         if choice_box[0] < 0 or choice_box[1] < 0:
             new_img_width = width if choice_box[
-                0] >= 0 else width - choice_box[0]
+                                         0] >= 0 else width - choice_box[0]
             new_img_height = height if choice_box[
-                1] >= 0 else height - choice_box[1]
+                                           1] >= 0 else height - choice_box[1]
             image_pad = np.zeros(
                 (new_img_height, new_img_width, 3), dtype=float)
             image_pad[:, :, :] = mean
@@ -692,7 +690,7 @@ def anchor_crop_image_sampling(img,
             end_right = start_left + choice_box_w
             end_bottom = start_top + choice_box_h
             current_image = image_pad[
-                start_top:end_bottom, start_left:end_right, :].copy()
+                            start_top:end_bottom, start_left:end_right, :].copy()
             image_height, image_width, _ = current_image.shape
             if cfg.filter_min_face:
                 bbox_w = current_boxes[:, 2] - current_boxes[:, 0]
@@ -848,11 +846,11 @@ def preprocess(img, bbox_labels, mode, image_path):
                 sampled_labels[i][1] = 1 - sampled_labels[i][3]
                 sampled_labels[i][3] = 1 - tmp
 
-    #img = Image.fromarray(img)
+    # img = Image.fromarray(img)
     img = to_chw_bgr(img)
     img = img.astype('float32')
     img -= cfg.img_mean
     img = img[[2, 1, 0], :, :]  # to RGB
-    #img = img * cfg.scale
+    # img = img * cfg.scale
 
     return img, sampled_labels

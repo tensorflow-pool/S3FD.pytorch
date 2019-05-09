@@ -179,7 +179,7 @@ def train():
                 logging.info('epoch:' + repr(epoch) + ' || iter:' + repr(iteration) + ' || Loss:%.4f' % (tloss) + 'lr:{:.6f}'.format(optimizer.param_groups[0]['lr']))
                 logging.info('->> conf loss:{:.4f} || loc loss:{:.4f}'.format(loss_c.item(), loss_l.item()))
 
-            if iteration != 0 and iteration % 50 == 0:
+            if iteration != 0 and iteration % 1000 == 0:
                 logging.info('Saving state, iter: %s', iteration)
                 file = 'sfd_' + args.dataset + '_' + repr(iteration) + '.pth'
                 torch.save(s3fd_net.state_dict(), os.path.join(save_folder, file))
