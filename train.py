@@ -44,7 +44,7 @@ parser.add_argument('--batch_size',
                     default=8, type=int,
                     help='Batch size for training')
 parser.add_argument('--resume',
-                    default="model/sfd_face_38000.pth", type=str,
+                    default="model/sfd_face_86400.pth", type=str,
                     help='Checkpoint state_dict file to resume training from')
 parser.add_argument('--num_workers',
                     default=4, type=int,
@@ -101,7 +101,8 @@ net = s3fd_net
 
 if args.resume:
     print('Resuming training, loading {}...'.format(args.resume))
-    start_epoch = net.load_weights(args.resume, 47)
+    epo = int(95000 / (len(train_dataset) / args.batch_size))
+    start_epoch = net.load_weights(args.resume, epo)
 
 else:
     vgg_weights = torch.load("weights/" + args.basenet)
