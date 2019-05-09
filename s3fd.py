@@ -1,4 +1,4 @@
-#-*- coding:utf-8 -*-
+# -*- coding:utf-8 -*-
 
 from __future__ import absolute_import
 from __future__ import division
@@ -57,8 +57,6 @@ class S3FD(nn.Module):
         if self.phase == 'test':
             self.softmax = nn.Softmax(dim=-1)
             self.detect = Detect(cfg)
- 
-
 
     def forward(self, x):
         """Applies network layers and ops on input image(s) x.
@@ -149,13 +147,12 @@ class S3FD(nn.Module):
         loc = torch.cat([o.view(o.size(0), -1) for o in loc], 1)
         conf = torch.cat([o.view(o.size(0), -1) for o in conf], 1)
 
-       
         if self.phase == 'test':
             output = self.detect(
-                loc.view(loc.size(0), -1, 4),                   # loc preds
+                loc.view(loc.size(0), -1, 4),  # loc preds
                 self.softmax(conf.view(conf.size(0), -1,
-                                       self.num_classes)),                # conf preds
-                self.priors.type(type(x.data))                  # default boxes
+                                       self.num_classes)),  # conf preds
+                self.priors.type(type(x.data))  # default boxes
             )
 
         else:
@@ -166,15 +163,18 @@ class S3FD(nn.Module):
             )
         return output
 
-    def load_weights(self, base_file):
+    def load_weights(self, base_file, default_epoch=0):
         other, ext = os.path.splitext(base_file)
         if ext == '.pkl' or '.pth':
             print('Loading weights into state dict...')
-            mdata = torch.load(base_file,
-                               map_location=lambda storage, loc: storage)
-            weights = mdata['weight']
-            epoch = mdata['epoch']
-            self.load_state_dict(weights)
+            mdata = torch.load(base_file, map_location=lambda storage, loc: storage)
+            if "weight" in mdata:
+                weights = mdata['weight']
+                epoch = mdata['epoch']
+                self.load_state_dict(weights)
+            else:
+                epoch = default_epoch
+                self.load_state_dict(mdata)
             print('Finished!')
         else:
             print('Sorry only .pth and .pkl files supported.')
@@ -242,7 +242,7 @@ def multibox(vgg, extra_layers, num_classes):
     loc_layers += [nn.Conv2d(vgg[14].out_channels, 4,
                              kernel_size=3, padding=1)]
     conf_layers += [nn.Conv2d(vgg[14].out_channels,
-                              3 + (num_classes-1), kernel_size=3, padding=1)]
+                              3 + (num_classes - 1), kernel_size=3, padding=1)]
 
     for k, v in enumerate(vgg_source):
         loc_layers += [nn.Conv2d(vgg[v].out_channels,
@@ -260,7 +260,7 @@ def multibox(vgg, extra_layers, num_classes):
 def build_s3fd(phase, num_classes=2):
     base_, extras_, head_ = multibox(
         vgg(vgg_cfg, 3), add_extras((extras_cfg), 1024), num_classes)
-    
+
     return S3FD(phase, base_, extras_, head_, num_classes)
 
 
@@ -268,4 +268,3 @@ if __name__ == '__main__':
     net = build_s3fd('train', num_classes=2)
     inputs = Variable(torch.randn(4, 3, 640, 640))
     output = net(inputs)
-

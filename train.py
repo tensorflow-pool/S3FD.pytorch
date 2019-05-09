@@ -1,13 +1,13 @@
-#-*- coding:utf-8 -*-
+# -*- coding:utf-8 -*-
 
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
 import argparse
+import logging
 import os
 import time
-import logging
 
 import numpy as np
 import torch
@@ -23,11 +23,12 @@ from layers.modules import MultiBoxLoss
 from s3fd import build_s3fd
 
 
-#os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
+# os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
 
 
 def str2bool(v):
     return v.lower() in ("yes", "true", "t", "1")
+
 
 parser = argparse.ArgumentParser(
     description='S3FD face Detector Training With Pytorch')
@@ -43,7 +44,7 @@ parser.add_argument('--batch_size',
                     default=8, type=int,
                     help='Batch size for training')
 parser.add_argument('--resume',
-                    default=None, type=str,
+                    default="model/sfd_face_38000.pth", type=str,
                     help='Checkpoint state_dict file to resume training from')
 parser.add_argument('--num_workers',
                     default=4, type=int,
@@ -68,7 +69,6 @@ parser.add_argument('--multigpu',
                     help='Use mutil Gpu training')
 args = parser.parse_args()
 
-
 if torch.cuda.is_available():
     if args.cuda:
         torch.set_default_tensor_type('torch.cuda.FloatTensor')
@@ -78,7 +78,6 @@ if torch.cuda.is_available():
         torch.set_default_tensor_type('torch.FloatTensor')
 else:
     torch.set_default_tensor_type('torch.FloatTensor')
-
 
 train_dataset, val_dataset = dataset_factory(args.dataset)
 
@@ -100,10 +99,9 @@ start_epoch = 0
 s3fd_net = build_s3fd('train', cfg.NUM_CLASSES)
 net = s3fd_net
 
-
 if args.resume:
     print('Resuming training, loading {}...'.format(args.resume))
-    start_epoch = net.load_weights(args.resume)
+    start_epoch = net.load_weights(args.resume, 47)
 
 else:
     vgg_weights = torch.load("weights/" + args.basenet)
@@ -127,6 +125,8 @@ criterion = MultiBoxLoss(cfg, args.dataset, args.cuda)
 print('Loading wider dataset...')
 
 save_folder = None
+
+
 def train():
     prefix = time.strftime("%Y-%m-%d-%H:%M:%S")
     global save_folder
@@ -143,9 +143,9 @@ def train():
     logging.getLogger().addHandler(fh)
     logging.info('Using the specified args:')
     logging.info(args)
-    
+
     step_index = 0
-    iteration = 0
+    iteration = int(start_epoch * len(train_dataset) / args.batch_size)
     net.train()
     for epoch in range(start_epoch, cfg.EPOCHES):
         losses = 0
@@ -175,7 +175,7 @@ def train():
 
             if iteration % 10 == 0:
                 tloss = losses / (batch_idx + 1)
-                #logging.info('Timer: %.4f' % (t1 - t0))
+                # logging.info('Timer: %.4f' % (t1 - t0))
                 logging.info('epoch:' + repr(epoch) + ' || iter:' + repr(iteration) + ' || Loss:%.4f' % (tloss) + 'lr:{:.6f}'.format(optimizer.param_groups[0]['lr']))
                 logging.info('->> conf loss:{:.4f} || loc loss:{:.4f}'.format(loss_c.item(), loss_l.item()))
 
@@ -185,7 +185,7 @@ def train():
                 torch.save(s3fd_net.state_dict(), os.path.join(save_folder, file))
             iteration += 1
 
-        #val(epoch)
+        # val(epoch)
         if iteration == cfg.MAX_STEPS:
             break
 
