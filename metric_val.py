@@ -26,8 +26,7 @@ class MApMetric(mx.metric.EvalMetric):
         optional, if provided, will save a ROC graph to tensorboard
     """
 
-    def __init__(self, ovp_thresh=0.35, use_difficult=True, class_names=None,
-                 pred_idx=0, roc_output_path=None, tensorboard_path=None):
+    def __init__(self, ovp_thresh=0.35, use_difficult=True, class_names=None, pred_idx=0, roc_output_path=None, tensorboard_path=None):
         super(MApMetric, self).__init__('mAP')
         if class_names is None:
             self.num = None
@@ -113,7 +112,7 @@ class MApMetric(mx.metric.EvalMetric):
                       for x, y in zip(self.sum_metric, self.num_inst)]
             return (names, values)
 
-    def update(self, labels, preds):
+    def update(self, labels, preds, thresh):
         """
         Update internal records. This function now only update internal buffer,
         sum_metric and num_inst are updated in _update() function instead when
@@ -161,11 +160,11 @@ class MApMetric(mx.metric.EvalMetric):
             #             print("pred", pred)
             # calculate for each class
             cid = 1
-            keep_index = np.where(pred[:, 0] > 0)[0]
+            keep_index = np.where(pred[:, 0] > thresh)[0]
             dets = pred[keep_index, :]
             # sort by score, desceding
             dets[dets[:, 0].argsort()[::-1]]
-            records = np.hstack((np.ones((dets.shape[0], 1)), np.zeros((dets.shape[0], 1))))
+            records = np.hstack((dets[:, 0][:, np.newaxis], np.zeros((dets.shape[0], 1))))
             # ground-truths
             gts = label
             if gts.size > 0:
@@ -205,7 +204,6 @@ class MApMetric(mx.metric.EvalMetric):
             records = records[np.where(records[:, -1] > 0)[0], :]
             if records.size > 0:
                 self._insert(cid, records, gt_count)
-
 
     def update_roc(self):
         """ update num_inst and sum_metric """
