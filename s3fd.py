@@ -224,8 +224,7 @@ def add_extras(cfg, i, batch_norm=False):
     for k, v in enumerate(cfg):
         if in_channels != 'S':
             if v == 'S':
-                layers += [nn.Conv2d(in_channels, cfg[k + 1],
-                                     kernel_size=(1, 3)[flag], stride=2, padding=1)]
+                layers += [nn.Conv2d(in_channels, cfg[k + 1], kernel_size=(1, 3)[flag], stride=2, padding=1)]
             else:
                 layers += [nn.Conv2d(in_channels, v, kernel_size=(1, 3)[flag])]
             flag = not flag
@@ -238,27 +237,20 @@ def multibox(vgg, extra_layers, num_classes):
     conf_layers = []
     vgg_source = [21, 28, -2]
 
-    loc_layers += [nn.Conv2d(vgg[14].out_channels, 4,
-                             kernel_size=3, padding=1)]
-    conf_layers += [nn.Conv2d(vgg[14].out_channels,
-                              3 + (num_classes - 1), kernel_size=3, padding=1)]
+    loc_layers += [nn.Conv2d(vgg[14].out_channels, 4, kernel_size=3, padding=1)]
+    conf_layers += [nn.Conv2d(vgg[14].out_channels, 3 + (num_classes - 1), kernel_size=3, padding=1)]
 
     for k, v in enumerate(vgg_source):
-        loc_layers += [nn.Conv2d(vgg[v].out_channels,
-                                 4, kernel_size=3, padding=1)]
-        conf_layers += [nn.Conv2d(vgg[v].out_channels,
-                                  num_classes, kernel_size=3, padding=1)]
+        loc_layers += [nn.Conv2d(vgg[v].out_channels, 4, kernel_size=3, padding=1)]
+        conf_layers += [nn.Conv2d(vgg[v].out_channels, num_classes, kernel_size=3, padding=1)]
     for k, v in enumerate(extra_layers[1::2], 2):
-        loc_layers += [nn.Conv2d(v.out_channels,
-                                 4, kernel_size=3, padding=1)]
-        conf_layers += [nn.Conv2d(v.out_channels,
-                                  num_classes, kernel_size=3, padding=1)]
+        loc_layers += [nn.Conv2d(v.out_channels, 4, kernel_size=3, padding=1)]
+        conf_layers += [nn.Conv2d(v.out_channels, num_classes, kernel_size=3, padding=1)]
     return vgg, extra_layers, (loc_layers, conf_layers)
 
 
 def build_s3fd(phase, num_classes=2):
-    base_, extras_, head_ = multibox(
-        vgg(vgg_cfg, 3), add_extras((extras_cfg), 1024), num_classes)
+    base_, extras_, head_ = multibox(vgg(vgg_cfg, 3), add_extras((extras_cfg), 1024), num_classes)
 
     return S3FD(phase, base_, extras_, head_, num_classes)
 

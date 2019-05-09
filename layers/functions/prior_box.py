@@ -1,12 +1,12 @@
-#-*- coding:utf-8 -*-
+# -*- coding:utf-8 -*-
 
-from __future__ import division
 from __future__ import absolute_import
+from __future__ import division
 from __future__ import print_function
 
-import torch
 from itertools import product as product
-import math
+
+import torch
 
 
 class PriorBox(object):
@@ -14,14 +14,14 @@ class PriorBox(object):
     feature map.
     """
 
-    def __init__(self, input_size, feature_maps,cfg):
+    def __init__(self, input_size, feature_maps, cfg):
         super(PriorBox, self).__init__()
         self.imh = input_size[0]
         self.imw = input_size[1]
 
         # number of priors for feature map location (either 4 or 6)
         self.variance = cfg.VARIANCE or [0.1]
-        #self.feature_maps = cfg.FEATURE_MAPS
+        # self.feature_maps = cfg.FEATURE_MAPS
         self.min_sizes = cfg.ANCHOR_SIZES
         self.steps = cfg.STEPS
         self.clip = cfg.CLIP
@@ -29,7 +29,6 @@ class PriorBox(object):
             if v <= 0:
                 raise ValueError('Variances must be greater than 0')
         self.feature_maps = feature_maps
-
 
     def forward(self):
         mean = []
@@ -56,6 +55,7 @@ class PriorBox(object):
 
 if __name__ == '__main__':
     from data.config import cfg
+
     p = PriorBox([640, 640], cfg)
     out = p.forward()
     print(out.size())

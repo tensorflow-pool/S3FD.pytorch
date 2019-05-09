@@ -1,16 +1,14 @@
-#-*- coding:utf-8 -*-
+# -*- coding:utf-8 -*-
 
-from __future__ import division
 from __future__ import absolute_import
+from __future__ import division
 from __future__ import print_function
 
-
-from .egohand import HandDetection
-from .widerface import WIDERDetection
-from .vochead import VOCDetection, VOCAnnotationTransform
-from .config import cfg
-
 import torch
+
+from .config import cfg
+from .vochead import VOCDetection, VOCAnnotationTransform
+from .widerface import WIDERDetection
 
 
 def dataset_factory(dataset):
@@ -22,7 +20,7 @@ def dataset_factory(dataset):
         val_dataset = WIDERDetection(cfg.HAND.VAL_FILE, mode='val')
     if dataset == 'head':
         train_dataset = VOCDetection(cfg.HEAD.DIR, image_sets=[
-                                     ('PartA', 'trainval'), ('PartB', 'trainval')],
+            ('PartA', 'trainval'), ('PartB', 'trainval')],
                                      target_transform=VOCAnnotationTransform(),
                                      mode='train',
                                      dataset_name='VOCPartAB')

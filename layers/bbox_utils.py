@@ -1,9 +1,8 @@
-#-*- coding:utf-8 -*-
+# -*- coding:utf-8 -*-
 
-from __future__ import division
 from __future__ import absolute_import
+from __future__ import division
 from __future__ import print_function
-
 
 import torch
 
@@ -16,7 +15,7 @@ def point_form(boxes):
     Return:
         boxes: (tensor) Converted xmin, ymin, xmax, ymax form of boxes.
     """
-    return torch.cat((boxes[:, :2] - boxes[:, 2:] / 2,     # xmin, ymin
+    return torch.cat((boxes[:, :2] - boxes[:, 2:] / 2,  # xmin, ymin
                       boxes[:, :2] + boxes[:, 2:] / 2), 1)  # xmax, ymax
 
 
@@ -29,7 +28,7 @@ def center_size(boxes):
         boxes: (tensor) Converted xmin, ymin, xmax, ymax form of boxes.
     """
     return torch.cat([(boxes[:, 2:] + boxes[:, :2]) / 2,  # cx, cy
-                     boxes[:, 2:] - boxes[:, :2]], 1)  # w, h
+                      boxes[:, 2:] - boxes[:, :2]], 1)  # w, h
 
 
 def intersect(box_a, box_b):
@@ -100,8 +99,7 @@ def match(threshold, truths, priors, variances, labels, loc_t, conf_t, idx):
     # [1,num_objects] best prior for each ground truth
     best_prior_overlap, best_prior_idx = overlaps.max(1, keepdim=True)
     # [1,num_priors] best ground truth for each prior
-    best_truth_overlap, best_truth_idx = overlaps.max(
-        0, keepdim=True)  # 0-2000
+    best_truth_overlap, best_truth_idx = overlaps.max(0, keepdim=True)  # 0-2000
     best_truth_idx.squeeze_(0)
     best_truth_overlap.squeeze_(0)
     best_prior_idx.squeeze_(1)
@@ -113,27 +111,24 @@ def match(threshold, truths, priors, variances, labels, loc_t, conf_t, idx):
         best_truth_idx[best_prior_idx[j]] = j
     _th1, _th2, _th3 = threshold  # _th1 = 0.1 ,_th2 = 0.35,_th3 = 0.5
 
-    N = (torch.sum(best_prior_overlap >= _th2) +
-         torch.sum(best_prior_overlap >= _th3)) // 2
-    matches = truths[best_truth_idx]          # Shape: [num_priors,4]
-    conf = labels[best_truth_idx]         # Shape: [num_priors]
+    N = (torch.sum(best_prior_overlap >= _th2) + torch.sum(best_prior_overlap >= _th3)) // 2
+    matches = truths[best_truth_idx]  # Shape: [num_priors,4]
+    conf = labels[best_truth_idx]  # Shape: [num_priors]
     conf[best_truth_overlap < _th2] = 0  # label as background
 
     best_truth_overlap_clone = best_truth_overlap.clone()
-    add_idx = best_truth_overlap_clone.gt(
-        _th1).eq(best_truth_overlap_clone.lt(_th2))
+    add_idx = best_truth_overlap_clone.gt(_th1).eq(best_truth_overlap_clone.lt(_th2))
     best_truth_overlap_clone[1 - add_idx] = 0
     stage2_overlap, stage2_idx = best_truth_overlap_clone.sort(descending=True)
 
     stage2_overlap = stage2_overlap.gt(_th1)
 
     if N > 0:
-        N = torch.sum(stage2_overlap[:N]) if torch.sum(
-            stage2_overlap[:N]) < N else N
+        N = torch.sum(stage2_overlap[:N]) if torch.sum(stage2_overlap[:N]) < N else N
         conf[stage2_idx[:N]] += 1
 
     loc = encode(matches, priors, variances)
-    loc_t[idx] = loc    # [num_priors,4] encoded offsets to learn
+    loc_t[idx] = loc  # [num_priors,4] encoded offsets to learn
     conf_t[idx] = conf  # [num_priors] top class label for each prior
 
 
@@ -174,11 +169,11 @@ def match_ssd(threshold, truths, priors, variances, labels, loc_t, conf_t, idx):
     # ensure every gt matches with its prior of max overlap
     for j in range(best_prior_idx.size(0)):
         best_truth_idx[best_prior_idx[j]] = j
-    matches = truths[best_truth_idx]          # Shape: [num_priors,4]
-    conf = labels[best_truth_idx]         # Shape: [num_priors]
+    matches = truths[best_truth_idx]  # Shape: [num_priors,4]
+    conf = labels[best_truth_idx]  # Shape: [num_priors]
     conf[best_truth_overlap < threshold] = 0  # label as background
     loc = encode(matches, priors, variances)
-    loc_t[idx] = loc    # [num_priors,4] encoded offsets to learn
+    loc_t[idx] = loc  # [num_priors,4] encoded offsets to learn
     conf_t[idx] = conf  # [num_priors] top class label for each prior
 
 
@@ -201,7 +196,7 @@ def encode(matched, priors, variances):
     g_cxcy /= (variances[0] * priors[:, 2:])
     # match wh / prior wh
     g_wh = (matched[:, 2:] - matched[:, :2]) / priors[:, 2:]
-    #g_wh = torch.log(g_wh) / variances[1]
+    # g_wh = torch.log(g_wh) / variances[1]
     g_wh = torch.log(g_wh) / variances[1]
     # return target for smooth_l1_loss
     return torch.cat([g_cxcy, g_wh], 1)  # [num_priors,4]

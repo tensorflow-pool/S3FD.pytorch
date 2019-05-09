@@ -6,22 +6,21 @@ from __future__ import print_function
 
 import argparse
 import os
-import os.path as osp
 import sys
-import time
 
 import cv2
 import numpy as np
-import scipy.io as sio
 import torch
-import torch.backends.cudnn as cudnn
-from PIL import Image
 from torch.autograd import Variable
 
 sys.path.append("..")
+from data.factory import detection_collate
 from data.config import cfg
 from s3fd import build_s3fd
 from utils.augmentations import to_chw_bgr
+from metric_val import VOC07MApMetric
+from data.widerface import WIDERDetection
+from torch.utils import data
 
 parser = argparse.ArgumentParser(description='s3fd evaluatuon wider')
 parser.add_argument('--model', type=str, default=os.path.join("..", 'weights/s3fd.pth'), help='trained model')
@@ -89,8 +88,7 @@ def multi_scale_test(net, image, max_im_shrink):
     det_s = det_s[index, :]
 
     # enlarge one times
-    bt = min(2, max_im_shrink) if max_im_shrink > 1 else (
-                                                                 st + max_im_shrink) / 2
+    bt = min(2, max_im_shrink) if max_im_shrink > 1 else (st + max_im_shrink) / 2
     det_b = detect_face(net, image, bt)
 
     # enlarge small image x times for small face
@@ -151,81 +149,33 @@ def bbox_vote(det):
     return dets
 
 
-def get_data():
-    subset = 'val'
-    if subset is 'val':
-        wider_face = sio.loadmat(os.path.join("..", 'eval_tools/wider_face_val.mat'))
-    else:
-        wider_face = sio.loadmat(os.path.join("..", './eval_tools/wider_face_test.mat'))
-    event_list = wider_face['event_list']
-    file_list = wider_face['file_list']
-    del wider_face
-
-    imgs_path = os.path.join(cfg.FACE.WIDER_DIR, 'WIDER_{}'.format(subset), 'images')
-    save_path = 'eval_tools/s3fd_{}'.format(subset)
-
-    return event_list, file_list, imgs_path, save_path
-
-
 if __name__ == '__main__':
-    event_list, file_list, imgs_path, save_path = get_data()
-    cfg.USE_NMS = False
     net = build_s3fd('test', cfg.NUM_CLASSES)
     net.load_state_dict(torch.load(args.model))
     net.eval()
 
     if use_cuda:
         net.cuda()
-        cudnn.benckmark = True
+        # cudnn.benckmark = True
+    save_path = 'eval_tools/s3fd_{}'.format("val")
+    val_metric = VOC07MApMetric(ovp_thresh=0.5, class_names=['face'], roc_output_path=save_path)
 
-    # transform = S3FDBasicTransform(cfg.INPUT_SIZE, cfg.MEANS)
+    val_dataset = WIDERDetection(cfg.FACE.VAL_FILE, mode='val')
+    val_loader = data.DataLoader(val_dataset, 4, num_workers=4, shuffle=False, collate_fn=detection_collate, pin_memory=True)
 
-    counter = 0
+    for batch_idx, (images, targets) in enumerate(val_loader):
+        images = Variable(images.cuda())
 
-    for index, event in enumerate(event_list):
-        filelist = file_list[index][0]
-        event_name = event[0][0]
-        path = os.path.join(save_path, event_name)
-        if not os.path.exists(path):
-            os.makedirs(path)
+        detections = net(images)
+        detections = detections.data
+        detections = detections.cpu().numpy()
+        det = detections[:, 1, :, :]
 
-        for num, file in enumerate(filelist):
-            im_name = file[0][0]
-            in_file = os.path.join(imgs_path, event_name, im_name[:] + '.jpg')
-            # img = cv2.imread(in_file)
-            img = Image.open(in_file)
-            if img.mode == 'L':
-                img = img.convert('RGB')
-            img = np.array(img)
+        val_metric.update(labels=targets, preds=det)
 
-            # max_im_shrink = (0x7fffffff / 577.0 /
-            #                 (img.shape[0] * img.shape[1])) ** 0.5
+        if batch_idx % 10 == 0:
+            print(batch_idx)
 
-            max_im_shrink = np.sqrt(
-                1700 * 1200 / (img.shape[0] * img.shape[1]))
-
-            shrink = max_im_shrink if max_im_shrink < 1 else 1
-            counter += 1
-
-            t1 = time.time()
-            det0 = detect_face(net, img, shrink)
-
-            det1 = flip_test(net, img, shrink)  # flip test
-            [det2, det3] = multi_scale_test(net, img, max_im_shrink)
-
-            det = np.row_stack((det0, det1, det2, det3))
-            dets = bbox_vote(det)
-
-            t2 = time.time()
-            print('Detect %04d th image costs %.4f' % (counter, t2 - t1))
-
-            fout = open(osp.join(save_path, event_name, im_name + '.txt'), 'w')
-            fout.write('{:s}\n'.format(event_name + '/' + im_name + '.jpg'))
-            fout.write('{:d}\n'.format(dets.shape[0]))
-            for i in range(dets.shape[0]):
-                xmin = dets[i][0]
-                ymin = dets[i][1]
-                xmax = dets[i][2]
-                ymax = dets[i][3]
-                score = dets[i][4]
-                fout.write('{:.1f} {:.1f} {:.1f} {:.1f} {:.3f}\n'.format(xmin, ymin, (xmax - xmin + 1), (ymax - ymin + 1), score))
+    names, values = val_metric.summary()
+    for name, value in zip(names, values):
+        print('Validation-{}={}'.format(name, value))

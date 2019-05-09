@@ -1,15 +1,13 @@
-#-*- coding:utf-8 -*-
+# -*- coding:utf-8 -*-
 
-from __future__ import division
 from __future__ import absolute_import
+from __future__ import division
 from __future__ import print_function
 
-import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
-
 
 from ..bbox_utils import match, log_sum_exp, match_ssd
 
@@ -79,8 +77,7 @@ class MultiBoxLoss(nn.Module):
             truths = targets[idx][:, :-1].data
             labels = targets[idx][:, -1].data
             defaults = priors.data
-            self.match(self.threshold, truths, defaults, self.variance, labels,
-                       loc_t, conf_t, idx)
+            self.match(self.threshold, truths, defaults, self.variance, labels, loc_t, conf_t, idx)
         if self.use_gpu:
             loc_t = loc_t.cuda()
             conf_t = conf_t.cuda()
@@ -99,8 +96,7 @@ class MultiBoxLoss(nn.Module):
         # print(loc_p)
         # Compute max conf across batch for hard negative mining
         batch_conf = conf_data.view(-1, self.num_classes)
-        loss_c = log_sum_exp(batch_conf) - \
-            batch_conf.gather(1, conf_t.view(-1, 1))
+        loss_c = log_sum_exp(batch_conf) - batch_conf.gather(1, conf_t.view(-1, 1))
 
         # Hard Negative Mining
         loss_c[pos.view(-1, 1)] = 0  # filter out pos boxes for now
@@ -108,15 +104,14 @@ class MultiBoxLoss(nn.Module):
         _, loss_idx = loss_c.sort(1, descending=True)
         _, idx_rank = loss_idx.sort(1)
         num_pos = pos.long().sum(1, keepdim=True)
-        num_neg = torch.clamp(self.negpos_ratio *
-                              num_pos, max=pos.size(1) - 1)
+        num_neg = torch.clamp(self.negpos_ratio * num_pos, max=pos.size(1) - 1)
         neg = idx_rank < num_neg.expand_as(idx_rank)
 
         # Confidence Loss Including Positive and Negative Examples
         pos_idx = pos.unsqueeze(2).expand_as(conf_data)
         neg_idx = neg.unsqueeze(2).expand_as(conf_data)
         conf_p = conf_data[(pos_idx + neg_idx).gt(0)
-                           ].view(-1, self.num_classes)
+        ].view(-1, self.num_classes)
         targets_weighted = conf_t[(pos + neg).gt(0)]
         loss_c = F.cross_entropy(conf_p, targets_weighted, size_average=False)
 

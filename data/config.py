@@ -1,13 +1,11 @@
-#-*- coding:utf-8 -*-
+# -*- coding:utf-8 -*-
 
-from __future__ import division
 from __future__ import absolute_import
+from __future__ import division
 from __future__ import print_function
 
-import os
-from easydict import EasyDict
 import numpy as np
-
+from easydict import EasyDict
 
 _C = EasyDict()
 cfg = _C
@@ -26,8 +24,8 @@ _C.data_anchor_sampling_prob = 0.5
 _C.min_face_size = 6.0
 _C.apply_distort = True
 _C.apply_expand = False
-_C.img_mean = np.array([104., 117., 123.])[:, np.newaxis, np.newaxis].astype(
-    'float32')
+#rgb
+_C.img_mean = np.array([104., 117., 123.])[:, np.newaxis, np.newaxis].astype('float32')
 _C.resize_width = 640
 _C.resize_height = 640
 _C.scale = 1 / 127.0
@@ -35,9 +33,9 @@ _C.anchor_sampling = True
 _C.filter_min_face = True
 
 # train config
-#_C.LR_STEPS = (120, 198, 250)
+# _C.LR_STEPS = (120, 198, 250)
 _C.MAX_STEPS = 200000
-_C.LR_STEPS = (80000,100000,120000)
+_C.LR_STEPS = (80000, 100000, 120000)
 _C.EPOCHES = 300
 
 # anchor config
