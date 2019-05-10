@@ -19,7 +19,7 @@ from data.widerface import detection_collate
 from data.config import cfg
 from s3fd import build_s3fd
 from metric.metric_pr_roc import VOC07MApMetric, TRUE_VAL, FALS_VAL
-from data.widerface import WIDERDetectionMat
+from data.widerface import WIDERDetection
 from torch.utils import data
 
 parser = argparse.ArgumentParser(description='s3fd evaluatuon wider')
@@ -48,7 +48,7 @@ if __name__ == '__main__':
 
     dataset_type = args.dataset
     model_name = os.path.basename(args.model)
-    save_path = 'pr_roc_{}_{}'.format(model_name, dataset_type)
+    save_path = 'pr_roc_fddb_{}_{}'.format(model_name, dataset_type)
 
     if not os.path.exists(save_path):
         os.mkdir(save_path)
@@ -66,8 +66,7 @@ if __name__ == '__main__':
     val_metric = VOC07MApMetric(thresh=args.thresh, roc_output_path=save_path)
     curr_path = os.path.abspath(os.path.dirname(__file__))
 
-    val_path = os.path.join(curr_path, "../data/wider_ground_truth/wider_{}_val.mat".format(dataset_type))
-    val_dataset = WIDERDetectionMat(os.path.join(cfg.FACE.WIDER_DIR, "WIDER_val/images"), val_path, mode='val')
+    val_dataset = WIDERDetection(cfg.FACE.FDDB_VAL_FILE, mode='val')
     val_loader = data.DataLoader(val_dataset, 4, num_workers=4, shuffle=False, collate_fn=detection_collate)
     img_count = len(val_dataset)
     for batch_idx, (images, targets, files) in enumerate(val_loader):
