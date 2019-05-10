@@ -247,10 +247,10 @@ class MApMetric(mx.metric.EvalMetric):
         recall_max = self.recall_at(recall, fp, None)
 
         if self.roc_output_path is not None:
-            roc_file = os.path.join(self.roc_output_path, "roc_" + str(self.thresh) + ".png")
-            self.save_roc_graph(recall=recall, prec=prec, plot_path=roc_file, ap=ap)
             pr_file = os.path.join(self.roc_output_path, "pr_" + str(self.thresh) + ".png")
-            self.save_fddb_roc_graph(recall=recall, fp=fp, plot_path=pr_file)
+            self.save_roc_graph(recall=recall, prec=prec, plot_path=pr_file, ap=ap)
+            roc_file = os.path.join(self.roc_output_path, "roc_" + str(self.thresh) + ".png")
+            self.save_fddb_roc_graph(recall=recall, fp=fp, plot_path=roc_file)
 
         self.num_inst[0] = 1
         self.sum_metric[0] = ap
