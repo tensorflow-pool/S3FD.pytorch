@@ -5,6 +5,8 @@ from __future__ import division
 from __future__ import print_function
 
 import argparse
+import logging
+import time
 import os
 import sys
 import numpy as np
@@ -21,7 +23,7 @@ from torch.utils import data
 
 parser = argparse.ArgumentParser(description='s3fd evaluatuon wider')
 parser.add_argument('--model', type=str, default=os.path.join("..", 'model/s3fd.pth'), help='trained model')
-parser.add_argument('--thresh', default=0.6, type=float, help='Final confidence threshold')
+parser.add_argument('--thresh', default=0.05, type=float, help='Final confidence threshold')
 args = parser.parse_args()
 
 use_cuda = torch.cuda.is_available()
@@ -42,9 +44,23 @@ if __name__ == '__main__':
 
         cudnn.benckmark = True
 
-    dataset_type = "hard"
+    dataset_type = "easy"
     model_name = os.path.basename(args.model)
     save_path = 'roc_{}_{}'.format(model_name, dataset_type)
+    
+    if not os.path.exists(save_path):
+        os.mkdir(save_path)
+    logging.basicConfig()
+    logging.getLogger().setLevel(logging.INFO)
+    prefix = time.strftime("%Y-%m-%d-%H:%M:%S")
+    fh = logging.FileHandler("{}/{}.log".format(save_path, prefix))
+    # create formatter#
+    formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+    # add formatter to ch
+    fh.setFormatter(formatter)
+    logging.getLogger().addHandler(fh)
+    logging.info(info)
+    
     val_metric = VOC07MApMetric(ovp_thresh=0.5, roc_output_path=save_path)
     curr_path = os.path.abspath(os.path.dirname(__file__))
 
@@ -69,8 +85,8 @@ if __name__ == '__main__':
             tp = np.sum(val_metric.records[:, 1].astype(int) == TRUE_VAL)
             fp = np.sum(val_metric.records[:, 1].astype(int) == FALS_VAL)
             gt = val_metric.gt_count
-            print("batch_idx {} img_count {} tp {} fp {} gt {}".format(batch_idx, img_count, tp, fp, gt))
+            logging.info("batch_idx {} img_count {} tp {} fp {} gt {}".format(batch_idx, img_count, tp, fp, gt))
 
     names, values = val_metric.summary()
     for name, value in zip(names, values):
-        print('Validation-{}={}'.format(name, value))
+        logging.info('Validation-{}={}'.format(name, value))
