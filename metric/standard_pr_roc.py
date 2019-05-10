@@ -66,7 +66,7 @@ if __name__ == '__main__':
     val_metric = VOC07MApMetric(thresh=args.thresh, roc_output_path=save_path)
     curr_path = os.path.abspath(os.path.dirname(__file__))
 
-    val_dataset = WIDERDetection(args.standard_file, mode='val')
+    val_dataset = WIDERDetection(os.path.expanduser(args.standard_file), mode='val')
     val_loader = data.DataLoader(val_dataset, 4, num_workers=4, shuffle=False, collate_fn=detection_collate)
     img_count = len(val_dataset)
     for batch_idx, (images, targets, files) in enumerate(val_loader):
