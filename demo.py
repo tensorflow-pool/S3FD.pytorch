@@ -21,7 +21,7 @@ from utils.augmentations import to_chw_bgr
 
 parser = argparse.ArgumentParser(description='s3df demo')
 parser.add_argument('--save_dir', type=str, default='tmp/', help='Directory for detect result')
-parser.add_argument('--model', type=str, default='weights/s3fd.pth', help='trained model')
+parser.add_argument('--model', type=str, default='model/s3fd.pth', help='trained model')
 parser.add_argument('--thresh', default=0.6, type=float, help='Final confidence threshold')
 args = parser.parse_args()
 
@@ -45,6 +45,7 @@ def detect(net, img_path, thresh):
     img = np.array(img)
     height, width, _ = img.shape
     max_im_shrink = np.sqrt(1700 * 1200 / (img.shape[0] * img.shape[1]))
+    max_im_shrink = 1
     image = cv2.resize(img, None, None, fx=max_im_shrink, fy=max_im_shrink, interpolation=cv2.INTER_LINEAR)
     # image = cv2.resize(img, (640, 640))
     x = to_chw_bgr(image)
@@ -68,6 +69,7 @@ def detect(net, img_path, thresh):
             score = detections[0, i, j, 0]
             pt = (detections[0, i, j, 1:] * scale).cpu().numpy()
             left_up, right_bottom = (pt[0], pt[1]), (pt[2], pt[3])
+            # print(left_up)
             j += 1
             cv2.rectangle(img, left_up, right_bottom, (0, 0, 255), 2)
             conf = "{:.3f}".format(score)
@@ -88,9 +90,11 @@ if __name__ == '__main__':
 
     if use_cuda:
         net.cuda()
-        cudnn.benckmark = True
+        # cudnn.benckmark = True
 
     img_path = './img'
+    img_path = '/home/lijc08/datasets/widerface/WIDER_val/images/0--Parade'
+    img_path = './tools/eval_tools/s3fd_val/hard'
     img_list = [os.path.join(img_path, x) for x in os.listdir(img_path) if x.endswith('jpg')]
     for path in img_list:
         detect(net, path, args.thresh)

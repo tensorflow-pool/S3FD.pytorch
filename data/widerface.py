@@ -4,9 +4,11 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import os
 import random
 
 import numpy as np
+import scipy.io as sio
 import torch
 import torch.utils.data as data
 from PIL import Image
@@ -53,8 +55,8 @@ class WIDERDetection(data.Dataset):
         return self.num_samples
 
     def __getitem__(self, index):
-        img, target, h, w = self.pull_item(index)
-        return img, target
+        img, target, h, w, image_path = self.pull_item(index)
+        return img, target, image_path
 
     def pull_item(self, index):
         while True:
@@ -67,12 +69,10 @@ class WIDERDetection(data.Dataset):
             boxes = self.annotransform(np.array(self.boxes[index]), im_width, im_height)
             label = np.array(self.labels[index])
             bbox_labels = np.hstack((label[:, np.newaxis], boxes)).tolist()
-            img, sample_labels = preprocess(
-                img, bbox_labels, self.mode, image_path)
+            img, sample_labels = preprocess(img, bbox_labels, self.mode, image_path)
             sample_labels = np.array(sample_labels)
             if len(sample_labels) > 0:
-                target = np.hstack(
-                    (sample_labels[:, 1:], sample_labels[:, 0][:, np.newaxis]))
+                target = np.hstack((sample_labels[:, 1:], sample_labels[:, 0][:, np.newaxis]))
 
                 assert (target[:, 2] > target[:, 0]).any()
                 assert (target[:, 3] > target[:, 1]).any()
@@ -90,7 +90,7 @@ class WIDERDetection(data.Dataset):
             draw.rectangle(bbox,outline='red')
         img.save('image.jpg')
         '''
-        return torch.from_numpy(img), target, im_height, im_width
+        return torch.from_numpy(img), target, im_height, im_width, image_path
 
     def annotransform(self, boxes, im_width, im_height):
         boxes[:, 0] /= im_width
@@ -98,6 +98,52 @@ class WIDERDetection(data.Dataset):
         boxes[:, 2] /= im_width
         boxes[:, 3] /= im_height
         return boxes
+
+
+class WIDERDetectionMat(WIDERDetection):
+    """docstring for WIDERDetection"""
+
+    def __init__(self, root, mat_file, mode='val'):
+        self.mode = mode
+        self.fnames = []
+        self.boxes = []
+        self.labels = []
+
+        mat_datas = sio.loadmat(mat_file)
+
+        event_list = mat_datas["event_list"]
+        face_bbx_list = mat_datas["face_bbx_list"]
+        file_list = mat_datas["file_list"]
+        event_cont = len(event_list)
+        for event_index in range(event_cont):
+            event = event_list[event_index][0][0]
+            face_bbxs = face_bbx_list[event_index][0]
+            files = file_list[event_index][0]
+            files_count = len(files)
+            for file_index in range(files_count):
+                bbxs = face_bbxs[file_index][0]
+                file = files[file_index][0][0]
+                box = []
+                label = []
+                num_faces = len(bbxs)
+                for i in range(num_faces):
+                    x = float(bbxs[i][0])
+                    y = float(bbxs[i][1])
+                    w = float(bbxs[i][2])
+                    h = float(bbxs[i][3])
+                    if w <= 0 or h <= 0:
+                        continue
+                    box.append([x, y, x + w, y + h])
+                    label.append(1)
+                if len(box) > 0:
+                    full_path = os.path.join(root, event, file + ".jpg")
+                    if os.path.exists(full_path):
+                        self.fnames.append(full_path)
+                        self.boxes.append(box)
+                        self.labels.append(label)
+                    else:
+                        print("miss ", full_path)
+        self.num_samples = len(self.boxes)
 
 
 def detection_collate(batch):
@@ -115,15 +161,16 @@ def detection_collate(batch):
     """
     targets = []
     imgs = []
+    files = []
     for sample in batch:
         imgs.append(sample[0])
         targets.append(torch.FloatTensor(sample[1]))
-    return torch.stack(imgs, 0), targets
+        files.append(sample[2])
+    return torch.stack(imgs, 0), targets, files
 
 
 if __name__ == '__main__':
-    from config import cfg
-
-    dataset = WIDERDetection(cfg.FACE.TRAIN_FILE)
+    dataset = WIDERDetectionMat("/home/lijc08/datasets/widerface/WIDER_val/images", "../eval_tools/ground_truth/wider_easy_val.mat")
     # for i in range(len(dataset)):
-    dataset.pull_item(14)
+    img, target, im_height, im_width = dataset.pull_item(14)
+    print(img, target, im_height, im_width)

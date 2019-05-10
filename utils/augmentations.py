@@ -826,16 +826,17 @@ def preprocess(img, bbox_labels, mode, image_path):
 
             img = Image.fromarray(img)
 
-    interp_mode = [
-        Image.BILINEAR, Image.HAMMING, Image.NEAREST, Image.BICUBIC,
-        Image.LANCZOS
-    ]
-    interp_indx = np.random.randint(0, 5)
-
-    img = img.resize((cfg.resize_width, cfg.resize_height),
-                     resample=interp_mode[interp_indx])
-
-    img = np.array(img)
+    if mode == 'train':
+        interp_mode = [
+            Image.BILINEAR, Image.HAMMING, Image.NEAREST, Image.BICUBIC,
+            Image.LANCZOS
+        ]
+        interp_indx = np.random.randint(0, 5)
+        img = img.resize((cfg.resize_width, cfg.resize_height), resample=interp_mode[interp_indx])
+        img = np.array(img)
+    else:
+        # img = img.resize((1024, 1024), resample=Image.NEAREST)
+        img = np.array(img)
 
     if mode == 'train':
         mirror = int(np.random.uniform(0, 2))
