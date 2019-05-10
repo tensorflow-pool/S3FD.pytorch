@@ -49,7 +49,7 @@ class WIDERDetection(data.Dataset):
                 self.boxes.append(box)
                 self.labels.append(label)
 
-        self.num_samples = 400 #len(self.boxes)
+        self.num_samples = len(self.boxes)
 
     def __len__(self):
         return self.num_samples
