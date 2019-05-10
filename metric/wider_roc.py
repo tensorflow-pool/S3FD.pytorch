@@ -66,7 +66,7 @@ if __name__ == '__main__':
     val_metric = VOC07MApMetric(thresh=args.thresh, roc_output_path=save_path)
     curr_path = os.path.abspath(os.path.dirname(__file__))
 
-    val_path = os.path.join(curr_path, "../eval_tools/ground_truth/wider_{}_val.mat".format(dataset_type))
+    val_path = os.path.join(curr_path, "../data/wider_ground_truth/wider_{}_val.mat".format(dataset_type))
     val_dataset = WIDERDetectionMat("/home/lijc08/datasets/widerface/WIDER_val/images", val_path, mode='val')
     val_loader = data.DataLoader(val_dataset, 4, num_workers=4, shuffle=False, collate_fn=detection_collate)
     img_count = len(val_dataset)
