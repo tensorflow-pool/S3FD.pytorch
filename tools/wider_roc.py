@@ -6,9 +6,10 @@ from __future__ import print_function
 
 import argparse
 import logging
-import time
 import os
 import sys
+import time
+
 import numpy as np
 import torch
 from torch.autograd import Variable
@@ -47,7 +48,7 @@ if __name__ == '__main__':
     dataset_type = "easy"
     model_name = os.path.basename(args.model)
     save_path = 'roc_{}_{}'.format(model_name, dataset_type)
-    
+
     if not os.path.exists(save_path):
         os.mkdir(save_path)
     logging.basicConfig()
@@ -60,7 +61,7 @@ if __name__ == '__main__':
     fh.setFormatter(formatter)
     logging.getLogger().addHandler(fh)
     logging.info(info)
-    
+
     val_metric = VOC07MApMetric(ovp_thresh=0.5, roc_output_path=save_path)
     curr_path = os.path.abspath(os.path.dirname(__file__))
 
