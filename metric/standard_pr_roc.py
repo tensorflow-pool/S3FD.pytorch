@@ -47,7 +47,8 @@ if __name__ == '__main__':
         cudnn.benckmark = False
 
     model_name = os.path.basename(args.model)
-    save_path = 'pr_roc_fddb_{}'.format(model_name)
+    dataset = os.path.basename(args.standard_file.split(".")[0])
+    save_path = 'pr_roc_{}_{}'.format(dataset, model_name)
 
     if not os.path.exists(save_path):
         os.mkdir(save_path)
