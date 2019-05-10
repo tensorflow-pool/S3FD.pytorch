@@ -7,7 +7,7 @@ from __future__ import print_function
 import argparse
 import os
 import sys
-
+import numpy as np
 import torch
 from torch.autograd import Variable
 
@@ -15,13 +15,13 @@ sys.path.append("..")
 from data.widerface import detection_collate
 from data.config import cfg
 from s3fd import build_s3fd
-from metric_val import VOC07MApMetric
+from metric_val import VOC07MApMetric, TRUE_VAL, FALS_VAL
 from data.widerface import WIDERDetectionMat
 from torch.utils import data
 
 parser = argparse.ArgumentParser(description='s3fd evaluatuon wider')
 parser.add_argument('--model', type=str, default=os.path.join("..", 'model/s3fd.pth'), help='trained model')
-parser.add_argument('--thresh', default=0.5, type=float, help='Final confidence threshold')
+parser.add_argument('--thresh', default=0.6, type=float, help='Final confidence threshold')
 args = parser.parse_args()
 
 use_cuda = torch.cuda.is_available()
@@ -45,7 +45,7 @@ if __name__ == '__main__':
     dataset_type = "easy"
     model_name = os.path.basename(args.model)
     save_path = 'roc_{}_{}'.format(model_name, dataset_type)
-    val_metric = VOC07MApMetric(ovp_thresh=0.05, roc_output_path=save_path)
+    val_metric = VOC07MApMetric(ovp_thresh=0.5, roc_output_path=save_path)
     curr_path = os.path.abspath(os.path.dirname(__file__))
 
     val_path = os.path.join(curr_path, "../eval_tools/ground_truth/wider_{}_val.mat".format(dataset_type))
@@ -66,7 +66,10 @@ if __name__ == '__main__':
         val_metric.update(labels=targets, preds=det, files=files, thresh=args.thresh)
 
         if batch_idx % 10 == 0:
-            print(batch_idx, img_count)
+            tp = np.sum(val_metric.records[:, 1].astype(int) == TRUE_VAL)
+            fp = np.sum(val_metric.records[:, 1].astype(int) == FALS_VAL)
+            gt = val_metric.gt_count
+            print("batch_idx {} img_count {} tp {} fp {} gt {}".format(batch_idx, img_count, tp, fp, gt))
 
     names, values = val_metric.summary()
     for name, value in zip(names, values):

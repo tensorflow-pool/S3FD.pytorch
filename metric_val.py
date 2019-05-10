@@ -38,6 +38,10 @@ class MApMetric(mx.metric.EvalMetric):
         self.roc_output_path = roc_output_path
         if not os.path.exists(roc_output_path):
             os.mkdir(roc_output_path)
+        parent_path = os.path.join(self.roc_output_path, "low_recall")
+        if not os.path.exists(parent_path):
+            os.mkdir(parent_path)
+
         self.reset()
 
     def reset(self):
@@ -53,14 +57,20 @@ class MApMetric(mx.metric.EvalMetric):
         self.records = None
         self.gt_count = 0
 
-    def _insert(self, records, count, file):
+    def _insert(self, records, count, file, labels):
         recall = np.sum(records[:, 1].astype(int) == TRUE_VAL) / count
         if recall < 0.8 and file is not None:
             img = cv2.imread(file, cv2.IMREAD_COLOR)
+            # score = detections[0, i, j, 0]
+            # pt = (detections[0, i, j, 1:] * scale).cpu().numpy()
+            # left_up, right_bottom = (pt[0], pt[1]), (pt[2], pt[3])
+            # # print(left_up)
+            # j += 1
+            # cv2.rectangle(img, left_up, right_bottom, (0, 0, 255), 2)
+
             parent_path = os.path.join(self.roc_output_path, "low_recall")
-            if not os.path.exists(parent_path):
-                os.mkdir(parent_path)
-            cv2.imwrite(os.path.join(parent_path, "%02f" % recall + os.path.basename(file)), img)
+            cv2.imwrite(os.path.join(parent_path, "%0.2f" % recall + os.path.basename(file)), img)
+
         if self.records is None:
             self.records = records
             self.gt_count = count
@@ -115,7 +125,6 @@ class MApMetric(mx.metric.EvalMetric):
             gts = label
 
             pred = preds[i]
-            cid = 1
             keep_index = np.where(pred[:, 0] > thresh)[0]
             dets = pred[keep_index, :]
 
@@ -152,7 +161,7 @@ class MApMetric(mx.metric.EvalMetric):
             assert np.sum(records[:, -1] == 0) == 0
             # records = records[np.where(records[:, -1] > 0)[0], :]
             if records.size > 0:
-                self._insert(records, gt_count, files[i] if files is not None else None)
+                self._insert(records, gt_count, files[i] if files is not None else None, labels)
 
     def _recall_prec(self, record, count):
         """ get recall and precision from internal records """

@@ -25,7 +25,7 @@ from utils.augmentations import to_chw_bgr
 
 parser = argparse.ArgumentParser(description='s3fd evaluatuon wider')
 parser.add_argument('--model', type=str, default=os.path.join("..", 'weights/s3fd.pth'), help='trained model')
-parser.add_argument('--thresh', default=0.05, type=float, help='Final confidence threshold')
+parser.add_argument('--thresh', default=0.6, type=float, help='Final confidence threshold')
 args = parser.parse_args()
 
 use_cuda = torch.cuda.is_available()
