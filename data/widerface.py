@@ -109,6 +109,7 @@ class WIDERDetectionMat(WIDERDetection):
         self.boxes = []
         self.labels = []
 
+        assert os.path.exists(mat_file)
         mat_datas = sio.loadmat(mat_file)
 
         event_list = mat_datas["event_list"]

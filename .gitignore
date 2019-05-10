@@ -16,6 +16,8 @@ tmp
 nohup.out
 models_*
 tools/roc_*
+metric/pr_roc_*
+metric/roc_*
 
 train_result
 

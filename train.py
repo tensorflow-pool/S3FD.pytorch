@@ -132,7 +132,7 @@ def train():
     global save_folder
     save_folder = "train_result/models_{}".format(prefix)
     if not os.path.exists(save_folder):
-        os.mkdir(save_folder)
+        os.makedirs(save_folder)
     logging.basicConfig()
     logging.getLogger().setLevel(logging.INFO)
     fh = logging.FileHandler("{}/train.log".format(save_folder))
