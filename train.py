@@ -181,7 +181,7 @@ def train():
 
             if iteration != 0 and iteration % 1000 == 0:
                 logging.info('Saving state, iter: %s', iteration)
-                file = 'sfd_' + args.dataset + '_' + repr(iteration) + '.pth'
+                file = 's3fd_' + repr(iteration) + '.pth'
                 torch.save(s3fd_net.state_dict(), os.path.join(save_folder, file))
             iteration += 1
 
@@ -221,7 +221,7 @@ def val(epoch):
     global min_loss
     if tloss < min_loss:
         logging.info('Saving best state,epoch %s', epoch)
-        file = 'sfd_{}.pth'.format(args.dataset)
+        file = 's3fd_{}.pth'.format(args.dataset)
         torch.save(s3fd_net.state_dict(), os.path.join(save_folder, file))
         min_loss = tloss
 
@@ -229,7 +229,7 @@ def val(epoch):
         'epoch': epoch,
         'weight': s3fd_net.state_dict(),
     }
-    file = 'sfd_{}_checkpoint.pth'.format(args.dataset)
+    file = 's3fd_{}_checkpoint.pth'.format(args.dataset)
     torch.save(states, os.path.join(save_folder, file))
 
 
