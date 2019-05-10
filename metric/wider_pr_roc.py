@@ -48,7 +48,7 @@ if __name__ == '__main__':
 
     dataset_type = args.dataset
     model_name = os.path.basename(args.model)
-    save_path = 'pr_roc_wider_{}_{}'.format(model_name, dataset_type)
+    save_path = 'pr_roc_wider_{}_{}'.format(dataset_type, model_name)
 
     if not os.path.exists(save_path):
         os.mkdir(save_path)
