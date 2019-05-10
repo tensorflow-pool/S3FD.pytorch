@@ -2,14 +2,13 @@ import os
 
 import cv2
 import matplotlib.pyplot as plt
-import mxnet as mx
 import numpy as np
 
 TRUE_VAL = 1
 FALS_VAL = 2
 
 
-class MApMetric(mx.metric.EvalMetric):
+class MApMetric():
     """
     Calculate mean AP for object detection task
 
@@ -31,7 +30,6 @@ class MApMetric(mx.metric.EvalMetric):
     """
 
     def __init__(self, thresh=0.6, roc_output_path=None):
-        super(MApMetric, self).__init__('mAP')
         self.thresh = thresh
         self.ovp_thresh = 0.5
         self.name = ['face-mAP', 'face-max-recall']
@@ -116,7 +114,7 @@ class MApMetric(mx.metric.EvalMetric):
             ih = np.maximum(iymax - iymin, 0.)
             inters = iw * ih
             uni = (x[2] - x[0]) * (x[3] - x[1]) + (ys[:, 2] - ys[:, 0]) * \
-                  (ys[:, 3] - ys[:, 1]) - inters
+                                                  (ys[:, 3] - ys[:, 1]) - inters
             ious = inters / uni
             ious[uni < 1e-12] = 0  # in case bad boxes
             return ious
@@ -216,9 +214,9 @@ class MApMetric(mx.metric.EvalMetric):
         else:
             return np.max(recall[fp <= fp_at])
 
-    def save_roc_graph(self, recall=None, prec=None, plot_path=None, ap=None):
+    def save_pr_graph(self, recall=None, prec=None, plot_path=None, ap=None):
         fig = plt.figure()
-        plt.title("roc")
+        plt.title("pr")
         plt.plot(recall, prec, 'b', label='AP = %0.2f' % ap)
         plt.legend(loc='lower right')
         plt.xlim([0, 1])
@@ -230,7 +228,7 @@ class MApMetric(mx.metric.EvalMetric):
 
     def save_fddb_roc_graph(self, recall=None, fp=None, plot_path=None):
         fig = plt.figure()
-        plt.title("pr")
+        plt.title("roc")
         plt.plot(fp, recall, 'b', label='fddb roc')
         plt.legend(loc='lower right')
         plt.xlim([0, len(fp)])
@@ -248,7 +246,7 @@ class MApMetric(mx.metric.EvalMetric):
 
         if self.roc_output_path is not None:
             pr_file = os.path.join(self.roc_output_path, "pr_" + str(self.thresh) + ".png")
-            self.save_roc_graph(recall=recall, prec=prec, plot_path=pr_file, ap=ap)
+            self.save_pr_graph(recall=recall, prec=prec, plot_path=pr_file, ap=ap)
             roc_file = os.path.join(self.roc_output_path, "roc_" + str(self.thresh) + ".png")
             self.save_fddb_roc_graph(recall=recall, fp=fp, plot_path=roc_file)
 

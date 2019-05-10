@@ -4,6 +4,8 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import os
+
 import numpy as np
 from easydict import EasyDict
 
@@ -24,7 +26,7 @@ _C.data_anchor_sampling_prob = 0.5
 _C.min_face_size = 6.0
 _C.apply_distort = True
 _C.apply_expand = False
-#rgb
+# rgb
 _C.img_mean = np.array([104., 117., 123.])[:, np.newaxis, np.newaxis].astype('float32')
 _C.resize_width = 640
 _C.resize_height = 640
@@ -58,7 +60,7 @@ _C.NUM_CLASSES = 2
 _C.USE_NMS = True
 
 # dataset config
-_C.HOME = '/home/lijc08/datasets/'
+_C.HOME = os.path.expanduser('~/datasets/')
 
 # hand config
 _C.HAND = EasyDict()
@@ -69,10 +71,14 @@ _C.HAND.OVERLAP_THRESH = 0.35
 
 # face config
 _C.FACE = EasyDict()
-_C.FACE.TRAIN_FILE = '/home/lijc08/datasets/widerface/face_train.txt'
-_C.FACE.VAL_FILE = '/home/lijc08/datasets/widerface/face_val.txt'
-_C.FACE.FDDB_DIR = '/home/lijc08/datasets/fddb'
-_C.FACE.WIDER_DIR = '/home/lijc08/datasets/widerface'
+
+_C.FACE.WIDER_DIR = os.path.expanduser('~/datasets/widerface')
+_C.FACE.TRAIN_FILE = os.path.expanduser('~/datasets/widerface/wider_train_standard1.txt')
+_C.FACE.VAL_FILE = os.path.expanduser('~/datasets/widerface/wider_val_standard1.txt')
+
+_C.FACE.FDDB_DIR = os.path.expanduser('~/datasets/fddb')
+_C.FACE.FDDB_VAL_FILE = os.path.join(_C.FACE.FDDB_DIR, "fddb_val_standard1.txt")
+
 _C.FACE.AFW_DIR = '/home/data/lj/AFW'
 _C.FACE.PASCAL_DIR = '/home/data/lj/PASCAL_FACE'
 _C.FACE.OVERLAP_THRESH = [0.1, 0.35, 0.5]

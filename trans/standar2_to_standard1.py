@@ -1,25 +1,43 @@
-#-*- coding:utf-8 -*-
+# -*- coding:utf-8 -*-
+'''
+- [ ] voc格式：
+xml
 
-from __future__ import division
+- [ ] standard格式1：box为int的ltwh
+path count, [box, label]*
+
+- [ ] standard格式2：box为int的ltwh
+path
+count
+box extras
+
+- [ ] fddb
+path
+count
+ellipse label
+
+- [ ] mxnet格式：box为float的ltrb
+index，2， item_count=6, [label, box,  extra]*, path
+'''
 from __future__ import absolute_import
+from __future__ import division
 from __future__ import print_function
 
-
 import os
-from data.config import cfg
-import cv2
+import sys
 
-WIDER_ROOT = os.path.join(cfg.HOME, 'widerface')
-train_list_file = os.path.join(WIDER_ROOT, 'wider_face_split',
-                               'wider_face_train_bbx_gt.txt')
-val_list_file = os.path.join(WIDER_ROOT, 'wider_face_split',
-                             'wider_face_val_bbx_gt.txt')
+sys.path.append("..")
+from data.config import cfg
+
+WIDER_ROOT = cfg.FACE.WIDER_DIR
+train_list_file = os.path.join(WIDER_ROOT, 'wider_face_split', 'wider_face_train_bbx_gt.txt')
+val_list_file = os.path.join(WIDER_ROOT, 'wider_face_split', 'wider_face_val_bbx_gt.txt')
 
 WIDER_TRAIN = os.path.join(WIDER_ROOT, 'WIDER_train', 'images')
 WIDER_VAL = os.path.join(WIDER_ROOT, 'WIDER_val', 'images')
 
 
-def parse_wider_file(root, file):
+def parse_file(root, file):
     with open(file, 'r') as fr:
         lines = fr.readlines()
     face_count = []
@@ -53,8 +71,8 @@ def parse_wider_file(root, file):
     return img_paths, img_faces
 
 
-def wider_data_file():
-    img_paths, bbox = parse_wider_file(WIDER_TRAIN, train_list_file)
+def trans_format():
+    img_paths, bbox = parse_file(WIDER_TRAIN, train_list_file)
     fw = open(cfg.FACE.TRAIN_FILE, 'w')
     for index in range(len(img_paths)):
         path = img_paths[index]
@@ -67,7 +85,7 @@ def wider_data_file():
         fw.write('\n')
     fw.close()
 
-    img_paths, bbox = parse_wider_file(WIDER_VAL, val_list_file)
+    img_paths, bbox = parse_file(WIDER_VAL, val_list_file)
     fw = open(cfg.FACE.VAL_FILE, 'w')
     for index in range(len(img_paths)):
         path = img_paths[index]
@@ -82,4 +100,4 @@ def wider_data_file():
 
 
 if __name__ == '__main__':
-    wider_data_file()
+    trans_format()
