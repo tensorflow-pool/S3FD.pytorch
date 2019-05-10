@@ -12,7 +12,6 @@ import time
 import numpy as np
 import torch
 import torch.backends.cudnn as cudnn
-import torch.nn as nn
 import torch.optim as optim
 import torch.utils.data as data
 from torch.autograd import Variable
@@ -131,7 +130,7 @@ save_folder = None
 def train():
     prefix = time.strftime("%Y-%m-%d-%H:%M:%S")
     global save_folder
-    save_folder = "models_{}".format(prefix)
+    save_folder = "train_result/models_{}".format(prefix)
     if not os.path.exists(save_folder):
         os.mkdir(save_folder)
     logging.basicConfig()

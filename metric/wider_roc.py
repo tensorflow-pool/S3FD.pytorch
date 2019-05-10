@@ -18,7 +18,7 @@ sys.path.append("..")
 from data.widerface import detection_collate
 from data.config import cfg
 from s3fd import build_s3fd
-from metric_val import VOC07MApMetric, TRUE_VAL, FALS_VAL
+from .metric_pr_roc import VOC07MApMetric, TRUE_VAL, FALS_VAL
 from data.widerface import WIDERDetectionMat
 from torch.utils import data
 

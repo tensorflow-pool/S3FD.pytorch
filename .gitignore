@@ -17,6 +17,7 @@ nohup.out
 models_*
 tools/roc_*
 
+train_result
 
 
 
