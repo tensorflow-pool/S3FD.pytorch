@@ -25,7 +25,7 @@ from torch.utils import data
 parser = argparse.ArgumentParser(description='s3fd evaluatuon wider')
 parser.add_argument('--model', type=str, default=os.path.join("..", 'model/s3fd.pth'), help='trained model')
 parser.add_argument('--thresh', default=0.05, type=float, help='Final confidence threshold')
-parser.add_argument('--dataset', type=str, default="easy", help='')
+parser.add_argument('--dataset', type=str, default="easy", help='no need')
 args = parser.parse_args()
 
 use_cuda = torch.cuda.is_available()
@@ -46,9 +46,8 @@ if __name__ == '__main__':
 
         cudnn.benckmark = False
 
-    dataset_type = args.dataset
     model_name = os.path.basename(args.model)
-    save_path = 'pr_roc_fddb_{}_{}'.format(model_name, dataset_type)
+    save_path = 'pr_roc_fddb_{}'.format(model_name)
 
     if not os.path.exists(save_path):
         os.mkdir(save_path)

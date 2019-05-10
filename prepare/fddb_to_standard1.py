@@ -60,7 +60,7 @@ def parse_file(root, file):
                 score = (float)(line[5])
 
                 mask = np.zeros((img.shape[0], img.shape[1]), dtype=np.uint8)
-                cv2.ellipse(mask, ((int)(center_x), (int)(center_y)), ((int)(major_axis_radius), (int)(minor_axis_radius)), angle, 0., 360., (255, 255, 255))
+                cv2.ellipse(mask, ((int)(center_x), (int)(center_y)), ((int)(minor_axis_radius), (int)(major_axis_radius)), angle, 0., 360., (255, 255, 255))
                 r = cv2.boundingRect(mask)
                 data = [r[0], r[1], r[2], r[3]]
                 bboxes.append(data)
