@@ -15,6 +15,7 @@ tools/eval_tools
 tmp
 nohup.out
 models_*
+tools/roc_*
 
 
 

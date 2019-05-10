@@ -21,7 +21,7 @@ from torch.utils import data
 
 parser = argparse.ArgumentParser(description='s3fd evaluatuon wider')
 parser.add_argument('--model', type=str, default=os.path.join("..", 'model/s3fd.pth'), help='trained model')
-parser.add_argument('--thresh', default=0.005, type=float, help='Final confidence threshold')
+parser.add_argument('--thresh', default=0.5, type=float, help='Final confidence threshold')
 args = parser.parse_args()
 
 use_cuda = torch.cuda.is_available()
@@ -38,20 +38,25 @@ if __name__ == '__main__':
 
     if use_cuda:
         net.cuda()
-        # cudnn.benckmark = True
-    save_path = 'eval_tools/s3fd_{}'.format("val")
-    val_metric = VOC07MApMetric(ovp_thresh=0.5, roc_output_path=save_path)
+        import torch.backends.cudnn as cudnn
+
+        cudnn.benckmark = True
+
+    dataset_type = "easy"
+    model_name = os.path.basename(args.model)
+    save_path = 'roc_{}_{}'.format(model_name, dataset_type)
+    val_metric = VOC07MApMetric(ovp_thresh=0.05, roc_output_path=save_path)
     curr_path = os.path.abspath(os.path.dirname(__file__))
 
-    val_path = os.path.join(curr_path, "../eval_tools/ground_truth/wider_easy_val.mat")
-    # val_path = os.path.join(curr_path, "../eval_tools/ground_truth/wider_medium_val.mat")
-    # val_path = os.path.join(curr_path, "../eval_tools/ground_truth/wider_hard_val.mat")
-
+    val_path = os.path.join(curr_path, "../eval_tools/ground_truth/wider_{}_val.mat".format(dataset_type))
     val_dataset = WIDERDetectionMat("/home/lijc08/datasets/widerface/WIDER_val/images", val_path, mode='val')
-    val_loader = data.DataLoader(val_dataset, 1, num_workers=0, shuffle=False, collate_fn=detection_collate)
+    val_loader = data.DataLoader(val_dataset, 4, num_workers=0, shuffle=False, collate_fn=detection_collate)
     img_count = len(val_dataset)
     for batch_idx, (images, targets, files) in enumerate(val_loader):
-        images = Variable(images.cuda())
+        if use_cuda:
+            images = Variable(images.cuda())
+        else:
+            images = Variable(images)
 
         detections = net(images)
         detections = detections.data

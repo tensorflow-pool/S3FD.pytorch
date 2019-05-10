@@ -112,21 +112,25 @@ class WIDERDetectionMat(WIDERDetection):
         mat_datas = sio.loadmat(mat_file)
 
         event_list = mat_datas["event_list"]
+        gt_list = mat_datas["gt_list"]
         face_bbx_list = mat_datas["face_bbx_list"]
         file_list = mat_datas["file_list"]
         event_cont = len(event_list)
         for event_index in range(event_cont):
             event = event_list[event_index][0][0]
+            gts = gt_list[event_index][0]
             face_bbxs = face_bbx_list[event_index][0]
             files = file_list[event_index][0]
             files_count = len(files)
             for file_index in range(files_count):
+                gt_indexes = gts[file_index][0]
                 bbxs = face_bbxs[file_index][0]
                 file = files[file_index][0][0]
                 box = []
                 label = []
                 num_faces = len(bbxs)
-                for i in range(num_faces):
+                for index in gt_indexes:
+                    i = index[0] - 1
                     x = float(bbxs[i][0])
                     y = float(bbxs[i][1])
                     w = float(bbxs[i][2])

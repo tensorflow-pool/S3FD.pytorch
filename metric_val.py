@@ -36,6 +36,8 @@ class MApMetric(mx.metric.EvalMetric):
         self.name = ['face-mAP', 'face-max-recall']
         self.num = len(self.name)
         self.roc_output_path = roc_output_path
+        if not os.path.exists(roc_output_path):
+            os.mkdir(roc_output_path)
         self.reset()
 
     def reset(self):
@@ -55,7 +57,7 @@ class MApMetric(mx.metric.EvalMetric):
         recall = np.sum(records[:, 1].astype(int) == TRUE_VAL) / count
         if recall < 0.8 and file is not None:
             img = cv2.imread(file, cv2.IMREAD_COLOR)
-            parent_path = os.path.join(self.roc_output_path, "hard")
+            parent_path = os.path.join(self.roc_output_path, "low_recall")
             if not os.path.exists(parent_path):
                 os.mkdir(parent_path)
             cv2.imwrite(os.path.join(parent_path, "%02f" % recall + os.path.basename(file)), img)

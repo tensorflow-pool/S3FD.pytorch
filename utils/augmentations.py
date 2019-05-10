@@ -835,7 +835,7 @@ def preprocess(img, bbox_labels, mode, image_path):
         img = img.resize((cfg.resize_width, cfg.resize_height), resample=interp_mode[interp_indx])
         img = np.array(img)
     else:
-        # img = img.resize((1024, 1024), resample=Image.NEAREST)
+        img = img.resize((640, 640), resample=Image.NEAREST)
         img = np.array(img)
 
     if mode == 'train':
