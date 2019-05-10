@@ -68,7 +68,7 @@ class MApMetric():
                 if fonded:
                     cv2.rectangle(img, left_up, right_bottom, (0, 0, 255), 2)
                 else:
-                    cv2.rectangle(img, left_up, right_bottom, (0, 255, 0), 2)
+                    cv2.rectangle(img, left_up, right_bottom, (0, 0, 0), 2)
 
             parent_path = os.path.join(self.roc_output_path, "low_recall")
             cv2.imwrite(os.path.join(parent_path, ("%0.2f" % recall) + os.path.basename(file)), img)
