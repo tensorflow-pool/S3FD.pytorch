@@ -59,11 +59,12 @@ class MApMetric(mx.metric.EvalMetric):
 
     def _insert(self, records, count, file, found, labels):
         recall = np.sum(records[:, 1].astype(int) == TRUE_VAL) / count
+        recall = float(recall)
         if recall < 0.8 and file is not None:
             img = cv2.imread(file, cv2.IMREAD_COLOR)
             h, w, _ = img.shape
             for index, fonded in enumerate(found):
-                label = labels[0]
+                label = labels[index]
                 left_up, right_bottom = (int(label[0] * w), int(label[1] * h)), (int(label[2] * w), int(label[3] * h))
                 if fonded:
                     cv2.rectangle(img, left_up, right_bottom, (0, 0, 255), 2)
