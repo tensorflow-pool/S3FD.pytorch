@@ -21,7 +21,7 @@ from torch.utils import data
 
 parser = argparse.ArgumentParser(description='s3fd evaluatuon wider')
 parser.add_argument('--model', type=str, default=os.path.join("..", 'model/s3fd.pth'), help='trained model')
-parser.add_argument('--thresh', default=0.6, type=float, help='Final confidence threshold')
+parser.add_argument('--thresh', default=0.9, type=float, help='Final confidence threshold')
 args = parser.parse_args()
 
 use_cuda = torch.cuda.is_available()

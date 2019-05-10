@@ -57,19 +57,21 @@ class MApMetric(mx.metric.EvalMetric):
         self.records = None
         self.gt_count = 0
 
-    def _insert(self, records, count, file, labels):
+    def _insert(self, records, count, file, found, labels):
         recall = np.sum(records[:, 1].astype(int) == TRUE_VAL) / count
         if recall < 0.8 and file is not None:
             img = cv2.imread(file, cv2.IMREAD_COLOR)
-            # score = detections[0, i, j, 0]
-            # pt = (detections[0, i, j, 1:] * scale).cpu().numpy()
-            # left_up, right_bottom = (pt[0], pt[1]), (pt[2], pt[3])
-            # # print(left_up)
-            # j += 1
-            # cv2.rectangle(img, left_up, right_bottom, (0, 0, 255), 2)
+            h, w, _ = img.shape
+            for index, fonded in enumerate(found):
+                label = labels[0]
+                left_up, right_bottom = (int(label[0] * w), int(label[1] * h)), (int(label[2] * w), int(label[3] * h))
+                if fonded:
+                    cv2.rectangle(img, left_up, right_bottom, (0, 0, 255), 2)
+                else:
+                    cv2.rectangle(img, left_up, right_bottom, (0, 255, 0), 2)
 
             parent_path = os.path.join(self.roc_output_path, "low_recall")
-            cv2.imwrite(os.path.join(parent_path, "%0.2f" % recall + os.path.basename(file)), img)
+            cv2.imwrite(os.path.join(parent_path, ("%0.2f" % recall) + os.path.basename(file)), img)
 
         if self.records is None:
             self.records = records
@@ -161,7 +163,7 @@ class MApMetric(mx.metric.EvalMetric):
             assert np.sum(records[:, -1] == 0) == 0
             # records = records[np.where(records[:, -1] > 0)[0], :]
             if records.size > 0:
-                self._insert(records, gt_count, files[i] if files is not None else None, labels)
+                self._insert(records, gt_count, files[i] if files is not None else None, found, gts)
 
     def _recall_prec(self, record, count):
         """ get recall and precision from internal records """
