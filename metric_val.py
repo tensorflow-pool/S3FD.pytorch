@@ -30,9 +30,10 @@ class MApMetric(mx.metric.EvalMetric):
         optional, if provided, will save a ROC graph to tensorboard
     """
 
-    def __init__(self, ovp_thresh=0.35, roc_output_path=None):
+    def __init__(self, thresh=0.6, roc_output_path=None):
         super(MApMetric, self).__init__('mAP')
-        self.ovp_thresh = ovp_thresh
+        self.thresh = thresh
+        self.ovp_thresh = 0.5
         self.name = ['face-mAP', 'face-max-recall']
         self.num = len(self.name)
         self.roc_output_path = roc_output_path
@@ -81,7 +82,7 @@ class MApMetric(mx.metric.EvalMetric):
             self.records = np.vstack((self.records, records))
             self.gt_count += count
 
-    def update(self, labels, preds, files, thresh):
+    def update(self, labels, preds, files):
         """
         Update internal records. This function now only update internal buffer,
         sum_metric and num_inst are updated in _update() function instead when
@@ -128,7 +129,7 @@ class MApMetric(mx.metric.EvalMetric):
             gts = label
 
             pred = preds[i]
-            keep_index = np.where(pred[:, 0] > thresh)[0]
+            keep_index = np.where(pred[:, 0] > self.thresh)[0]
             dets = pred[keep_index, :]
 
             # sort by score, desceding
@@ -215,14 +216,9 @@ class MApMetric(mx.metric.EvalMetric):
         else:
             return np.max(recall[fp <= fp_at])
 
-    def save_roc_graph(self, recall=None, prec=None, cls="", path=None, ap=None):
-        if not os.path.exists(path):
-            os.mkdir(path)
-        plot_path = os.path.join(path, 'roc_' + cls)
-        if os.path.exists(plot_path):
-            os.remove(plot_path)
+    def save_roc_graph(self, recall=None, prec=None, plot_path=None, ap=None):
         fig = plt.figure()
-        plt.title(cls)
+        plt.title("roc")
         plt.plot(recall, prec, 'b', label='AP = %0.2f' % ap)
         plt.legend(loc='lower right')
         plt.xlim([0, 1])
@@ -232,14 +228,9 @@ class MApMetric(mx.metric.EvalMetric):
         plt.savefig(plot_path)
         plt.close(fig)
 
-    def save_fddb_roc_graph(self, recall=None, fp=None, cls="", path=None):
-        if not os.path.exists(path):
-            os.mkdir(path)
-        plot_path = os.path.join(path, 'fddb_roc_' + cls)
-        if os.path.exists(plot_path):
-            os.remove(plot_path)
+    def save_fddb_roc_graph(self, recall=None, fp=None, plot_path=None):
         fig = plt.figure()
-        plt.title(cls)
+        plt.title("pr")
         plt.plot(fp, recall, 'b', label='fddb roc')
         plt.legend(loc='lower right')
         plt.xlim([0, len(fp)])
@@ -256,8 +247,10 @@ class MApMetric(mx.metric.EvalMetric):
         recall_max = self.recall_at(recall, fp, None)
 
         if self.roc_output_path is not None:
-            self.save_roc_graph(recall=recall, prec=prec, cls="face", path=self.roc_output_path, ap=ap)
-            self.save_fddb_roc_graph(recall=recall, fp=fp, cls="face", path=self.roc_output_path)
+            roc_file = os.path.join(self.roc_output_path, "roc_" + str(self.thresh) + ".png")
+            self.save_roc_graph(recall=recall, prec=prec, plot_path=roc_file, ap=ap)
+            pr_file = os.path.join(self.roc_output_path, "pr_" + str(self.thresh) + ".png")
+            self.save_fddb_roc_graph(recall=recall, fp=fp, plot_path=pr_file)
 
         self.num_inst[0] = 1
         self.sum_metric[0] = ap

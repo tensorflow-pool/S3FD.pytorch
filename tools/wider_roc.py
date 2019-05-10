@@ -25,6 +25,7 @@ from torch.utils import data
 parser = argparse.ArgumentParser(description='s3fd evaluatuon wider')
 parser.add_argument('--model', type=str, default=os.path.join("..", 'model/s3fd.pth'), help='trained model')
 parser.add_argument('--thresh', default=0.05, type=float, help='Final confidence threshold')
+parser.add_argument('--dataset', type=str, default="easy", help='')
 args = parser.parse_args()
 
 use_cuda = torch.cuda.is_available()
@@ -45,7 +46,7 @@ if __name__ == '__main__':
 
         cudnn.benckmark = True
 
-    dataset_type = "easy"
+    dataset_type = args.dataset
     model_name = os.path.basename(args.model)
     save_path = 'roc_{}_{}'.format(model_name, dataset_type)
 
@@ -60,9 +61,9 @@ if __name__ == '__main__':
     # add formatter to ch
     fh.setFormatter(formatter)
     logging.getLogger().addHandler(fh)
-    logging.info(info)
+    logging.info(args)
 
-    val_metric = VOC07MApMetric(ovp_thresh=0.5, roc_output_path=save_path)
+    val_metric = VOC07MApMetric(thresh=args.thresh, roc_output_path=save_path)
     curr_path = os.path.abspath(os.path.dirname(__file__))
 
     val_path = os.path.join(curr_path, "../eval_tools/ground_truth/wider_{}_val.mat".format(dataset_type))
@@ -80,7 +81,7 @@ if __name__ == '__main__':
         detections = detections.cpu().numpy()
         det = detections[:, 1, :, :]
 
-        val_metric.update(labels=targets, preds=det, files=files, thresh=args.thresh)
+        val_metric.update(labels=targets, preds=det, files=files)
 
         if batch_idx % 10 == 0:
             tp = np.sum(val_metric.records[:, 1].astype(int) == TRUE_VAL)
