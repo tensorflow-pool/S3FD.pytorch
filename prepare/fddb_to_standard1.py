@@ -72,11 +72,11 @@ def parse_file(root, file):
 
 
 def trans_format():
-    FDDB_ROOT = cfg.FACE.FDDB_DIR
-    if os.path.exists(cfg.FACE.FDDB_VAL_FILE):
-        os.remove(cfg.FACE.FDDB_VAL_FILE)
+    FDDB_ROOT = cfg.FDDB_DIR
+    if os.path.exists(cfg.FDDB_VAL_FILE):
+        os.remove(cfg.FDDB_VAL_FILE)
 
-    fw = open(cfg.FACE.FDDB_VAL_FILE, 'w')
+    fw = open(cfg.FDDB_VAL_FILE, 'w')
     for i in range(1, 11):
         origin_file = os.path.join(FDDB_ROOT, "FDDB-folds", "FDDB-fold-%02d-ellipseList.txt" % i)
         img_paths, bbox = parse_file(os.path.join(FDDB_ROOT, "originalPics"), origin_file)

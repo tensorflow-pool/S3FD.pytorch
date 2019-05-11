@@ -24,7 +24,7 @@ from torch.utils import data
 
 parser = argparse.ArgumentParser(description='s3fd evaluatuon wider')
 parser.add_argument('--model', type=str, default=os.path.join("..", 'model/s3fd.pth'), help='trained model')
-parser.add_argument('--standard_file', type=str, default=os.path.join(cfg.FACE.FDDB_DIR, "fddb_val_standard1.txt"), help='trained model')
+parser.add_argument('--standard_file', type=str, default=os.path.join(cfg.FDDB_DIR, "fddb_val_standard1.txt"), help='trained model')
 parser.add_argument('--thresh', default=0.05, type=float, help='Final confidence threshold')
 args = parser.parse_args()
 

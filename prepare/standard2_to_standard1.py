@@ -29,16 +29,9 @@ import sys
 sys.path.append("..")
 from data.config import cfg
 
-WIDER_ROOT = cfg.FACE.WIDER_DIR
-train_list_file = os.path.join(WIDER_ROOT, 'wider_face_split', 'wider_face_train_bbx_gt.txt')
-val_list_file = os.path.join(WIDER_ROOT, 'wider_face_split', 'wider_face_val_bbx_gt.txt')
 
-WIDER_TRAIN = os.path.join(WIDER_ROOT, 'WIDER_train', 'images')
-WIDER_VAL = os.path.join(WIDER_ROOT, 'WIDER_val', 'images')
-
-
-def parse_file(root, file):
-    with open(file, 'r') as fr:
+def parse_file(img_root, list_file):
+    with open(list_file, 'r') as fr:
         lines = fr.readlines()
     face_count = []
     img_paths = []
@@ -58,7 +51,7 @@ def parse_file(root, file):
             flag = False
             count = int(line)
         if 'jpg' in line:
-            img_paths += [os.path.join(root, line)]
+            img_paths += [os.path.join(img_root, line)]
             flag = True
 
     total_face = 0
@@ -71,9 +64,9 @@ def parse_file(root, file):
     return img_paths, img_faces
 
 
-def trans_format():
-    img_paths, bbox = parse_file(WIDER_TRAIN, train_list_file)
-    fw = open(cfg.FACE.TRAIN_FILE, 'w')
+def trans_dataset(img_root, list_file, target_file):
+    img_paths, bbox = parse_file(img_root, list_file)
+    fw = open(target_file, 'w')
     for index in range(len(img_paths)):
         path = img_paths[index]
         boxes = bbox[index]
@@ -85,18 +78,19 @@ def trans_format():
         fw.write('\n')
     fw.close()
 
-    img_paths, bbox = parse_file(WIDER_VAL, val_list_file)
-    fw = open(cfg.FACE.VAL_FILE, 'w')
-    for index in range(len(img_paths)):
-        path = img_paths[index]
-        boxes = bbox[index]
-        fw.write(path)
-        fw.write(' {}'.format(len(boxes)))
-        for box in boxes:
-            data = ' {} {} {} {} {}'.format(box[0], box[1], box[2], box[3], 1)
-            fw.write(data)
-        fw.write('\n')
-    fw.close()
+
+def trans_format():
+    WIDER_ROOT = cfg.WIDER_DIR
+
+    train_img_root = os.path.join(WIDER_ROOT, 'WIDER_train', 'images')
+    train_list_file = os.path.join(WIDER_ROOT, 'wider_face_split', 'wider_face_train_bbx_gt.txt')
+    target_file = cfg.WIDER_TRAIN_FILE
+    trans_dataset(train_img_root, train_list_file, target_file)
+
+    val_img_root = os.path.join(WIDER_ROOT, 'WIDER_val', 'images')
+    val_list_file = os.path.join(WIDER_ROOT, 'wider_face_split', 'wider_face_val_bbx_gt.txt')
+    target_file = cfg.WIDER_VAL_FILE
+    trans_dataset(val_img_root, val_list_file, target_file)
 
 
 if __name__ == '__main__':

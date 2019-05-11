@@ -5,24 +5,24 @@ https://github.com/fmassa/vision/blob/voc_dataset/torchvision/datasets/voc.py
 
 Updated by: Ellis Brown, Max deGroot
 """
+from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-from __future__ import absolute_import
 
 import os.path as osp
+import random
 import sys
+
+import numpy as np
 import torch
 import torch.utils.data as data
-import cv2
-import numpy as np
-import random 
 
 if sys.version_info[0] == 2:
     import xml.etree.cElementTree as ET
 else:
     import xml.etree.ElementTree as ET
 from utils.augmentations import preprocess
-from PIL import ImageDraw, Image
+from PIL import Image
 
 
 class VOCAnnotationTransform(object):
@@ -64,8 +64,8 @@ class VOCAnnotationTransform(object):
                 # scale height or width
                 cur_pt = cur_pt / width if i % 2 == 0 else cur_pt / height
                 bndbox.append(cur_pt)
-            #label_idx = 1
-           # bndbox.append(label_idx)
+            # label_idx = 1
+            # bndbox.append(label_idx)
             res += [bndbox]  # [xmin, ymin, xmax, ymax, label_ind]
             # img_id = target.find('filename').text[:-4]
         return res  # [[xmin, ymin, xmax, ymax, label_ind], ... ]
@@ -132,7 +132,7 @@ class VOCDetection(data.Dataset):
                 target = self.target_transform(target, width, height)
             bbox_labels = target
             target = np.array(target)
-            if target.ndim!=2:
+            if target.ndim != 2:
                 index = random.randrange(0, len(self.ids))
                 continue
             img, sample_labels = preprocess(
@@ -164,7 +164,7 @@ class VOCDetection(data.Dataset):
         img_id = self.ids[index]
         img_path = self._imgpath % img_id
         img = Image.open(img_path)
-        if img.mode=='L':
+        if img.mode == 'L':
             img.convert('RGB')
         img = np.array(img)
         return img
@@ -202,5 +202,6 @@ class VOCDetection(data.Dataset):
 
 if __name__ == '__main__':
     from config import cfg
+
     dataset = VOCDetection(cfg.HEAD.DIR)
     dataset.pull_item(0)

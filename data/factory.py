@@ -13,8 +13,8 @@ from .widerface import WIDERDetection
 
 def dataset_factory(dataset):
     if dataset == 'face':
-        train_dataset = WIDERDetection(cfg.FACE.TRAIN_FILE, mode='train')
-        val_dataset = WIDERDetection(cfg.FACE.VAL_FILE, mode='val')
+        train_dataset = WIDERDetection(cfg.WIDER_TRAIN_FILE, mode='train')
+        val_dataset = WIDERDetection(cfg.WIDER_VAL_FILE, mode='val')
     if dataset == 'hand':
         train_dataset = WIDERDetection(cfg.HAND.TRAIN_FILE, mode='train')
         val_dataset = WIDERDetection(cfg.HAND.VAL_FILE, mode='val')

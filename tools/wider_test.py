@@ -161,7 +161,7 @@ def get_data():
     file_list = wider_face['file_list']
     del wider_face
 
-    imgs_path = os.path.join(cfg.FACE.WIDER_DIR, 'WIDER_{}'.format(subset), 'images')
+    imgs_path = os.path.join(cfg.WIDER_DIR, 'WIDER_{}'.format(subset), 'images')
     save_path = 'eval_tools/s3fd_{}'.format(subset)
 
     return event_list, file_list, imgs_path, save_path
