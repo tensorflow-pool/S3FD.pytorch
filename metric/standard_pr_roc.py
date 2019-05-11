@@ -26,6 +26,7 @@ parser = argparse.ArgumentParser(description='s3fd evaluatuon wider')
 parser.add_argument('--model', type=str, default=os.path.join("..", 'model/s3fd.pth'), help='trained model')
 parser.add_argument('--standard_file', type=str, default=os.path.join(cfg.FDDB_DIR, "fddb_val_standard1.txt"), help='trained model')
 parser.add_argument('--thresh', default=0.05, type=float, help='Final confidence threshold')
+parser.add_argument('--batch_size', default=4, type=int, help='batch')
 args = parser.parse_args()
 
 use_cuda = torch.cuda.is_available()
@@ -67,7 +68,7 @@ if __name__ == '__main__':
     curr_path = os.path.abspath(os.path.dirname(__file__))
 
     val_dataset = WIDERDetection(os.path.expanduser(args.standard_file), mode='val')
-    val_loader = data.DataLoader(val_dataset, 4, num_workers=4, shuffle=False, collate_fn=detection_collate)
+    val_loader = data.DataLoader(val_dataset, args.batch_size, num_workers=4, shuffle=False, collate_fn=detection_collate)
     img_count = len(val_dataset)
     for batch_idx, (images, targets, files) in enumerate(val_loader):
         if use_cuda:

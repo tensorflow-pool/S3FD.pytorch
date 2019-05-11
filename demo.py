@@ -11,7 +11,6 @@ import time
 import cv2
 import numpy as np
 import torch
-import torch.backends.cudnn as cudnn
 from PIL import Image
 from torch.autograd import Variable
 
@@ -47,7 +46,12 @@ def detect(net, img_path, thresh):
     max_im_shrink = np.sqrt(1700 * 1200 / (img.shape[0] * img.shape[1]))
     max_im_shrink = 1
     image = cv2.resize(img, None, None, fx=max_im_shrink, fy=max_im_shrink, interpolation=cv2.INTER_LINEAR)
-    # image = cv2.resize(img, (640, 640))
+    image = cv2.resize(img, (640, 640))
+
+    # image = img.resize((1920, 1080), resample=Image.NEAREST)
+    # img = np.array(img)
+    # image = np.array(image)
+
     x = to_chw_bgr(image)
     x = x.astype('float32')
     x -= cfg.img_mean
@@ -93,8 +97,8 @@ if __name__ == '__main__':
         # cudnn.benckmark = True
 
     img_path = './img'
-    img_path = '/home/lijc08/datasets/widerface/WIDER_val/images/0--Parade'
-    img_path = './tools/eval_tools/s3fd_val/hard'
+    # img_path = '/home/lijc08/datasets/widerface/WIDER_val/images/0--Parade'
+    # img_path = './tools/eval_tools/s3fd_val/hard'
     img_list = [os.path.join(img_path, x) for x in os.listdir(img_path) if x.endswith('jpg')]
     for path in img_list:
         detect(net, path, args.thresh)

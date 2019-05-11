@@ -87,10 +87,11 @@ _C.VOC_TRAIN_FILE = os.path.join(_C.VOC_DIR, "voc_train_standard1.txt")
 _C.VOC_VAL_FILE = os.path.join(_C.VOC_DIR, "voc_val_standard1.txt")
 _C.VOC_TEST_FILE = os.path.join(_C.VOC_DIR, "voc_test_standard1.txt")
 
+_C.FACE = EasyDict()
+_C.FACE.OVERLAP_THRESH = [0.1, 0.35, 0.5]
 
 # _C.FACE.AFW_DIR = '/home/data/lj/AFW'
 # _C.FACE.PASCAL_DIR = '/home/data/lj/PASCAL_FACE'
-# _C.FACE.OVERLAP_THRESH = [0.1, 0.35, 0.5]
 
 #
 # # head config
