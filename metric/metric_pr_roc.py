@@ -113,8 +113,7 @@ class MApMetric():
             iw = np.maximum(ixmax - ixmin, 0.)
             ih = np.maximum(iymax - iymin, 0.)
             inters = iw * ih
-            uni = (x[2] - x[0]) * (x[3] - x[1]) + (ys[:, 2] - ys[:, 0]) * \
-                                                  (ys[:, 3] - ys[:, 1]) - inters
+            uni = (x[2] - x[0]) * (x[3] - x[1]) + (ys[:, 2] - ys[:, 0]) * (ys[:, 3] - ys[:, 1]) - inters
             ious = inters / uni
             ious[uni < 1e-12] = 0  # in case bad boxes
             return ious
@@ -231,7 +230,7 @@ class MApMetric():
         plt.title("roc")
         plt.plot(fp, recall, 'b', label='fddb roc')
         plt.legend(loc='lower right')
-        plt.xlim([0, len(fp)])
+        plt.xlim([0, fp[-1] * 1.1])
         plt.ylim([0, 1])
         plt.ylabel('recall')
         plt.xlabel('false postive')
