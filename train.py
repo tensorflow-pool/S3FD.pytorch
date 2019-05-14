@@ -176,7 +176,7 @@ def train():
             if iteration % 10 == 0:
                 tloss = losses / (batch_idx + 1)
                 # logging.info('Timer: %.4f' % (t1 - t0))
-                logging.info('epoch:' + repr(epoch) + ' || iter:' + repr(iteration) + ' || Loss:%.4f' % (tloss) + 'lr:{:.6f}'.format(optimizer.param_groups[0]['lr']))
+                logging.info('epoch:' + repr(epoch) + ' || iter:' + repr(iteration) + ' || Loss:%.4f' % (loss) + 'lr:{:.6f}'.format(optimizer.param_groups[0]['lr']))
                 logging.info('->> conf loss:{:.4f} || loc loss:{:.4f}'.format(loss_c.item(), loss_l.item()))
 
             if iteration != 0 and iteration % 1000 == 0:

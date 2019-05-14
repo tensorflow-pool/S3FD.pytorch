@@ -91,6 +91,7 @@ def match(threshold, truths, priors, variances, labels, loc_t, conf_t, idx):
         The matched indices corresponding to 1)location and 2)confidence preds.
     """
     # jaccard index
+    #TODO:label为零了，要改torch.ones_like(best_truth_overlap)
     overlaps = jaccard(
         truths,
         point_form(priors)
@@ -113,7 +114,7 @@ def match(threshold, truths, priors, variances, labels, loc_t, conf_t, idx):
 
     N = (torch.sum(best_prior_overlap >= _th2) + torch.sum(best_prior_overlap >= _th3)) // 2
     matches = truths[best_truth_idx]  # Shape: [num_priors,4]
-    conf = labels[best_truth_idx]  # Shape: [num_priors]
+    conf = torch.ones_like(best_truth_overlap)# Shape: [num_priors]
     conf[best_truth_overlap < _th2] = 0  # label as background
 
     best_truth_overlap_clone = best_truth_overlap.clone()
