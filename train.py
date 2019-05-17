@@ -14,6 +14,8 @@ import torch
 import torch.backends.cudnn as cudnn
 import torch.optim as optim
 import torch.utils.data as data
+from tensorboardX import SummaryWriter
+from torch import nn
 from torch.autograd import Variable
 
 from data.config import cfg
@@ -40,10 +42,10 @@ parser.add_argument('--basenet',
                     default='vgg16_reducedfc.pth',
                     help='Pretrained base model')
 parser.add_argument('--batch_size',
-                    default=8, type=int,
+                    default=4, type=int,
                     help='Batch size for training')
 parser.add_argument('--resume',
-                    default="model/sfd_face_86400.pth", type=str,
+                    default="model/s3fd.pth", type=str,
                     help='Checkpoint state_dict file to resume training from')
 parser.add_argument('--num_workers',
                     default=4, type=int,
@@ -126,11 +128,14 @@ print('Loading wider dataset...')
 
 save_folder = None
 
+writer = None
+
 
 def train():
-    prefix = time.strftime("%Y-%m-%d-%H:%M:%S")
     global save_folder
-    save_folder = "train_result/models_{}".format(prefix)
+    global writer
+    prefix = time.strftime("%Y-%m-%d-%H:%M:%S")
+    save_folder = "train/models_{}".format(prefix)
     if not os.path.exists(save_folder):
         os.makedirs(save_folder)
     logging.basicConfig()
@@ -143,6 +148,7 @@ def train():
     logging.getLogger().addHandler(fh)
     logging.info('Using the specified args:')
     logging.info(args)
+    writer = SummaryWriter(save_folder)
 
     step_index = 0
     iteration = int(start_epoch * len(train_dataset) / args.batch_size)
@@ -173,11 +179,27 @@ def train():
             t1 = time.time()
             losses += loss.item()
 
-            if iteration % 10 == 0:
+            writer.add_scalar('loss', loss.item(), iteration)
+
+            if iteration % 2 == 0:
                 tloss = losses / (batch_idx + 1)
                 # logging.info('Timer: %.4f' % (t1 - t0))
                 logging.info('epoch:' + repr(epoch) + ' || iter:' + repr(iteration) + ' || Loss:%.4f' % (loss) + 'lr:{:.6f}'.format(optimizer.param_groups[0]['lr']))
                 logging.info('->> conf loss:{:.4f} || loc loss:{:.4f}'.format(loss_c.item(), loss_l.item()))
+
+                # for name, param in net.named_parameters():
+                #     writer.add_histogram("data." + name, param.clone().cpu().data.numpy(), iteration, bins=100)
+                #     writer.add_histogram("grad." + name, param.grad.clone().cpu().data.numpy(), iteration, bins=100)
+
+                # w1 = torch.empty(256, 512, 3, 3)
+                # nn.init.xavier_uniform_(w1)
+                # writer.add_histogram("init.uniform", w1.cpu().data.numpy(), iteration, bins=100)
+                #
+                # w2 = torch.empty(256, 512, 3, 3)
+                # nn.init.xavier_normal_(w2)
+                # writer.add_histogram("init.normal", w2.cpu().data.numpy(), iteration, bins=100)
+                #
+                # writer.add_pr_curve('xoxo', np.random.randint(2, size=100), np.random.rand(100), iteration)
 
             if iteration != 0 and iteration % 1000 == 0:
                 logging.info('Saving state, iter: %s', iteration)
